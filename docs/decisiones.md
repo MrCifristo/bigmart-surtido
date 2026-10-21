@@ -7,12 +7,40 @@ medida que avanza el proyecto.
 
 | Elemento | Propuesta |
 |---|---|
-| Contexto | BigMart es una cadena de 10 tiendas de cuatro formatos (Grocery Store y Supermarket Type1, Type2 y Type3). Asignar el surtido y el inventario sin saber cuánto venderá cada producto en cada tienda genera sobreinventario o ventas perdidas. |
-| Stakeholder | Gerente de Category Management, con apoyo de Operaciones de tiendas. |
-| Pregunta de negocio | ¿Cómo debería BigMart ajustar el surtido de cada tienda para vender más: qué productos agregar, dónde el desempeño está por debajo de lo esperado y qué productos retirar? |
-| Objetivo analítico | Regresión de unidades vendidas por producto y tienda. Las tres salidas (agregar, revisar y retirar) se leen de las mismas predicciones. |
-| Métrica de éxito | Técnica: MAE, RMSE y R² frente a la línea base. De negocio: monto en Q de las mejores oportunidades y brecha en Q de las tiendas o categorías por debajo de lo esperado. |
-| Impacto | Asignación de surtido según la demanda esperada y foco de gestión en las tiendas con brecha. |
+| Contexto | BigMart es una cadena de 10 tiendas de cuatro formatos (Grocery Store y Supermarket Type1, Type2 y Type3). Con el mismo catálogo, las tiendas venden montos muy distintos, y la dirección necesita saber dónde intervenir y qué formato replicar. |
+| Stakeholder | Gerente de Operaciones de tiendas y Dirección Comercial (decisiones de intervención, inversión y expansión), con apoyo de Category Management (surtido). |
+| Pregunta de negocio | ¿Qué tiendas y formatos venden por debajo de su potencial, y dónde debería BigMart concentrar su surtido e inversión para aumentar las ventas? |
+| Objetivo analítico | Regresión de unidades por producto y tienda para estimar cuánto *debería* vender cada tienda según su surtido. La brecha entre lo real y lo esperado (con predicciones fuera de muestra) mide el desempeño. Con SHAP se cuantifica el efecto del formato, la ubicación y el producto. |
+| Métrica de éxito | Técnica: MAE, RMSE y R² con validación cruzada frente a la línea base "promedio por formato". De negocio: brecha en Q identificada por tienda y formato, y estabilidad de esa brecha entre productos. |
+| Impacto | Priorizar la intervención en las tiendas con brecha, decidir qué formato replicar en la expansión y asignar el surtido de mayor precio a los formatos de mayor demanda. |
+
+**Cómo se responden las preguntas derivadas:**
+
+- **Agregar productos (A):** el surtido se decide por formato y rango de precio,
+  no por producto individual, porque el producto no muestra señal propia (ver la sección 4).
+- **Revisar tiendas (B):** es la pregunta principal (brecha real vs. esperado).
+- **Retirar productos (C):** que un producto rinda poco en una tienda no
+  predice que rinda poco en otra, así que la recomendación es no
+  descatalogar por una mala venta puntual.
+- **Formato de expansión (D):** el efecto del formato es grande y
+  estadísticamente claro, pero Type2 y Type3 son una sola tienda cada uno.
+  Va como recomendación, con esa limitación declarada.
+
+**Cifras preliminares** (comparadas con el promedio de unidades de los Supermarket Type1, 16.3 por producto):
+
+| Tienda | Formato | Brecha | Brecha en Q |
+|---|---|---|---|
+| OUT027 | Type3 | +61.7% | +1,318,103 |
+| OUT035 | Type1 | +4.3% | +93,260 |
+| OUT045 | Type1 | −4.8% | −102,825 |
+| OUT018 | Type2 | −13.8% | −296,469 |
+| OUT010 / OUT019 | Grocery | −85% | −1.09 M / −1.03 M |
+
+- OUT018 (Type2) vende 2.6 unidades menos que el promedio Type1 **en los
+  mismos 924 productos** (t ≈ −10.6).
+- OUT027 (Type3) es 1 de 10 tiendas y genera el 18.6% de las ventas.
+- La probabilidad de que un producto en el 25% inferior de una tienda Type1
+  también lo esté en otra es de 0.245, prácticamente igual al azar (0.25).
 
 ## 2. Variable objetivo: unidades en lugar de ventas en Q
 
