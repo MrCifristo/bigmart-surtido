@@ -1,0 +1,57 @@
+# Data Catalog del proyecto BigMart.
+# Documentación: https://docs.kedro.org/en/stable/catalog-data/introduction/
+
+# --- 01 raw ---------------------------------------------------------------
+bigmart_raw:
+  type: pandas.CSVDataset
+  filepath: data/01_raw/bigmart.csv
+
+# --- 02 intermediate ------------------------------------------------------
+bigmart_normalizado:
+  type: pandas.CSVDataset
+  filepath: data/02_intermediate/bigmart_normalizado.csv
+
+# --- 03 primary -----------------------------------------------------------
+bigmart_limpio:
+  type: pandas.CSVDataset
+  filepath: data/03_primary/bigmart_limpio.csv
+
+reporte_calidad_datos:
+  type: json.JSONDataset
+  filepath: data/08_reporting/reporte_calidad_datos.json
+
+# --- 04 feature -----------------------------------------------------------
+bigmart_features:
+  type: pandas.CSVDataset
+  filepath: data/04_feature/bigmart_features.csv
+
+# --- 05 model input -------------------------------------------------------
+X_train:
+  type: pandas.CSVDataset
+  filepath: data/05_model_input/X_train.csv
+
+X_test:
+  type: pandas.CSVDataset
+  filepath: data/05_model_input/X_test.csv
+
+y_train:
+  type: pandas.CSVDataset
+  filepath: data/05_model_input/y_train.csv
+
+y_test:
+  type: pandas.CSVDataset
+  filepath: data/05_model_input/y_test.csv
+
+# --- 06 models ------------------------------------------------------------
+modelo_baseline:
+  type: pickle.PickleDataset
+  filepath: data/06_models/modelo_baseline.pkl
+
+modelo:
+  type: pickle.PickleDataset
+  filepath: data/06_models/modelo.pkl
+
+# --- 08 reporting ---------------------------------------------------------
+metricas:
+  type: json.JSONDataset
+  filepath: data/08_reporting/metricas.json

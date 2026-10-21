@@ -1,0 +1,15 @@
+data_processing:
+  # Unificación de etiquetas inconsistentes en Item_Fat_Content.
+  mapa_fat_content:
+    LF: Low Fat
+    low fat: Low Fat
+    reg: Regular
+  # Prefijo de Item_Identifier -> categoría de producto.
+  mapa_categoria_producto:
+    FD: Comida
+    DR: Bebida
+    NC: No consumible
+  # Año de referencia para calcular la antigüedad de la tienda (año de los datos).
+  anio_referencia: 2013
+  # Percentil para recortar (winsorizar) valores extremos de visibilidad.
+  percentil_tope_visibilidad: 0.99

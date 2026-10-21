@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  validar:
+    runs-on: ubuntu-latest
+    env:
+      KEDRO_DISABLE_TELEMETRY: "true"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Instalar dependencias
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Ruff (lint)
+        run: ruff check .
+
+      - name: Ruff (formato)
+        run: ruff format --check .
+
+      - name: Pruebas
+        run: pytest
+
+      - name: Ejecutar pipeline Kedro
+        run: kedro run
+
+      - name: Verificar outputs del pipeline
+        run: |
+          test -f data/06_models/modelo.pkl
+          test -f data/08_reporting/metricas.json
+          cat data/08_reporting/metricas.json
