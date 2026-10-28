@@ -10,6 +10,7 @@ from .nodes import (
     evaluar_escenarios_costo,
     graficar_asignacion,
     marcar_perecederos,
+    validar_parametros,
 )
 
 
@@ -17,6 +18,12 @@ def create_pipeline(**kwargs) -> Pipeline:
     """Crea el pipeline ``asignacion_inventario``."""
     return Pipeline(
         [
+            Node(
+                func=validar_parametros,
+                inputs="params:asignacion_inventario",
+                outputs="parametros_asignacion",
+                name="validar_parametros",
+            ),
             Node(
                 func=marcar_perecederos,
                 inputs=[
@@ -28,13 +35,13 @@ def create_pipeline(**kwargs) -> Pipeline:
             ),
             Node(
                 func=comparar_reglas_planificacion,
-                inputs=["datos_asignacion", "params:asignacion_inventario"],
+                inputs=["datos_asignacion", "parametros_asignacion"],
                 outputs="comparacion_reglas",
                 name="comparar_reglas_planificacion",
             ),
             Node(
                 func=ajustar_modelo_cuantilico,
-                inputs=["datos_asignacion", "params:asignacion_inventario"],
+                inputs=["datos_asignacion", "parametros_asignacion"],
                 outputs="ajuste_cuantilico",
                 name="ajustar_modelo_cuantilico",
             ),
@@ -42,7 +49,7 @@ def create_pipeline(**kwargs) -> Pipeline:
                 func=evaluar_escenarios_costo,
                 inputs=[
                     "datos_asignacion",
-                    "params:asignacion_inventario",
+                    "parametros_asignacion",
                     "ajuste_cuantilico",
                 ],
                 outputs="costos_por_escenario",
@@ -50,13 +57,13 @@ def create_pipeline(**kwargs) -> Pipeline:
             ),
             Node(
                 func=analizar_sensibilidad,
-                inputs=["datos_asignacion", "params:asignacion_inventario"],
+                inputs=["datos_asignacion", "parametros_asignacion"],
                 outputs="sensibilidad_costos",
                 name="analizar_sensibilidad",
             ),
             Node(
                 func=construir_regla_asignacion,
-                inputs=["datos_asignacion", "params:asignacion_inventario"],
+                inputs=["datos_asignacion", "parametros_asignacion"],
                 outputs=["modelo_asignacion", "tabla_asignacion"],
                 name="construir_regla_asignacion",
             ),
