@@ -32,7 +32,7 @@ tests/                             # pruebas con pytest
 
 | Pipeline | Nodos | Salidas principales |
 |---|---|---|
-| `data_processing` | `generar_reporte_calidad` → `normalizar_datos` → `imputar_faltantes` → `crear_features` | `data/08_reporting/reporte_calidad_datos.json`, `data/04_feature/bigmart_features.csv` |
+| `data_processing` | `generar_reporte_calidad` → `normalizar_datos` → `imputar_faltantes` → `crear_features` → `graficar_exploracion` | `data/08_reporting/reporte_calidad_datos.json`, `data/04_feature/bigmart_features.csv`, `data/08_reporting/exploracion.png` |
 | `data_science` | `dividir_datos` → `entrenar_baseline` / `entrenar_modelo` → `evaluar_modelos`, `validacion_cruzada`, `explicar_modelo` | `data/06_models/*.pkl`, `data/08_reporting/metricas*.json`, `data/08_reporting/*shap*` |
 | `asignacion_inventario` | `marcar_perecederos` → `comparar_reglas_planificacion`, `ajustar_modelo_cuantilico` → `evaluar_escenarios_costo`, `analizar_sensibilidad`, `construir_regla_asignacion` → `graficar_asignacion` | `data/06_models/modelo_asignacion.pkl`, `data/07_model_output/tabla_asignacion.csv`, `data/08_reporting/{comparacion_reglas,ajuste_cuantilico}.json`, `costos_por_escenario.csv`, `sensibilidad_costos.csv`, `asignacion_inventario.png` |
 
