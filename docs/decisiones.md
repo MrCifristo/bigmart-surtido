@@ -3,44 +3,34 @@
 Registro de las decisiones importantes y de su justificación. Se actualiza a
 medida que avanza el proyecto.
 
-## 1. Problema de negocio (pendiente de aprobación)
+## 1. Problema de negocio
 
-| Elemento | Propuesta |
+| Elemento | Definición |
 |---|---|
-| Contexto | BigMart es una cadena de 10 tiendas de cuatro formatos (Grocery Store y Supermarket Type1, Type2 y Type3). Con el mismo catálogo, las tiendas venden montos muy distintos, y la dirección necesita saber dónde intervenir y qué formato replicar. |
-| Stakeholder | Gerente de Operaciones de tiendas y Dirección Comercial (decisiones de intervención, inversión y expansión), con apoyo de Category Management (surtido). |
-| Pregunta de negocio | ¿Qué tiendas y formatos venden por debajo de su potencial, y dónde debería BigMart concentrar su surtido e inversión para aumentar las ventas? |
-| Objetivo analítico | Regresión de unidades por producto y tienda para estimar cuánto *debería* vender cada tienda según su surtido. La brecha entre lo real y lo esperado (con predicciones fuera de muestra) mide el desempeño. Con SHAP se cuantifica el efecto del formato, la ubicación y el producto. |
-| Métrica de éxito | Técnica: MAE, RMSE y R² con validación cruzada frente a la línea base "promedio por formato". De negocio: brecha en Q identificada por tienda y formato, y estabilidad de esa brecha entre productos. |
-| Impacto | Priorizar la intervención en las tiendas con brecha, decidir qué formato replicar en la expansión y asignar el surtido de mayor precio a los formatos de mayor demanda. |
+| Contexto | BigMart es una cadena de 10 tiendas de cuatro formatos (Grocery Store y Supermarket Type1, Type2 y Type3) con un catálogo de 1,559 productos. Cada producto se surte desde un centro de distribución, y enviar de más o de menos tiene costo: lo que sobra se echa a perder o ocupa bodega, y lo que falta es venta perdida. Esos dos costos no son iguales: en un perecedero pesa más que sobre y en un no perecedero pesa más que falte. |
+| Stakeholder | Gerente de Logística / centro de distribución, que decide cuántas unidades de cada producto enviar a cada tienda. |
+| Pregunta de negocio | ¿Cuántas unidades de cada producto conviene enviar a cada tienda, considerando que en los perecederos cuesta más que sobre y en los no perecederos cuesta más que falte? |
+| Objetivo analítico | Regresión de las unidades vendidas por producto y tienda. Primero, regresión a la media para saber qué información sirve para planificar (historial del producto vs. formato de tienda). Después, **regresión cuantílica**: con costos asimétricos, la cantidad óptima a enviar es un cuantil de la demanda, `costo_faltante / (costo_faltante + costo_sobrante)` (problema del vendedor de periódicos). |
+| Métrica de éxito | Técnica: MAE y pérdida pinball con validación cruzada agrupada por producto (los productos evaluados nunca se vieron al entrenar). De negocio: unidades mal asignadas (sobrantes + faltantes) y costo total ponderado, medidos contra las **unidades realmente vendidas**, frente a la línea base "enviar el promedio del formato". |
+| Impacto | Con la regla recomendada el costo de asignación baja 18.8% frente a enviar el promedio, y planificar por formato en vez de por historial del producto reduce 9.5% las unidades mal asignadas. El análisis de sensibilidad da la regla para cualquier proporción de costos que defina BigMart. |
 
-**Cómo se responden las preguntas derivadas:**
+**Por qué este enfoque.** Una pregunta anterior medía la "brecha" de cada
+tienda contra un potencial definido por nosotros (lo que vendería un Type1).
+Se descartó porque ese potencial no se observa en los datos: la conclusión
+dependía de la referencia elegida y no se podía verificar. En la asignación de
+inventario todo se evalúa contra lo que realmente se vendió. Los costos de
+faltar y sobrar tampoco están en los datos, por eso no se fija uno: se
+presentan escenarios y un análisis de sensibilidad.
 
-- **Agregar productos (A):** el surtido se decide por formato y rango de precio,
-  no por producto individual, porque el producto no muestra señal propia (ver la sección 4).
-- **Revisar tiendas (B):** es la pregunta principal (brecha real vs. esperado).
-- **Retirar productos (C):** que un producto rinda poco en una tienda no
-  predice que rinda poco en otra, así que la recomendación es no
-  descatalogar por una mala venta puntual.
-- **Formato de expansión (D):** el efecto del formato es grande y
-  estadísticamente claro, pero Type2 y Type3 son una sola tienda cada uno.
-  Va como recomendación, con esa limitación declarada.
+**Preguntas sugeridas por el catedrático** (y dónde se responden):
 
-**Cifras preliminares** (comparadas con el promedio de unidades de los Supermarket Type1, 16.3 por producto):
-
-| Tienda | Formato | Brecha | Brecha en Q |
-|---|---|---|---|
-| OUT027 | Type3 | +61.7% | +1,318,103 |
-| OUT035 | Type1 | +4.3% | +93,260 |
-| OUT045 | Type1 | −4.8% | −102,825 |
-| OUT018 | Type2 | −13.8% | −296,469 |
-| OUT010 / OUT019 | Grocery | −85% | −1.09 M / −1.03 M |
-
-- OUT018 (Type2) vende 2.6 unidades menos que el promedio Type1 **en los
-  mismos 924 productos** (t ≈ −10.6).
-- OUT027 (Type3) es 1 de 10 tiendas y genera el 18.6% de las ventas.
-- La probabilidad de que un producto en el 25% inferior de una tienda Type1
-  también lo esté en otra es de 0.245, prácticamente igual al azar (0.25).
+- *¿Qué ventas esperar según visibilidad, tamaño, ubicación y tier?* La
+  visibilidad no tiene efecto; el tamaño y el tier no se pueden separar de la
+  tienda (secciones 4 y 5). Por eso la regla de envío usa el formato.
+- *¿Se puede enfocar en los productos?* El producto no tiene señal propia en
+  unidades: planificar por su historial empeora el envío (sección 6.1). La
+  decisión por producto que sí se sostiene es su tipo (perecedero o no), que
+  define el costo de equivocarse.
 
 ## 2. Variable objetivo: unidades en lugar de ventas en Q
 
@@ -76,11 +66,28 @@ es configurable en `parameters_data_science.yml` (`target`).
   precio" explica el 60.5% de la varianza de las ventas en Q, igual que los
   modelos de ML probados.
 
-Implicación: las decisiones por formato de tienda tienen respaldo en los
-datos. Las recomendaciones por producto individual hay que plantearlas con
-cautela y declararlas como limitación.
+- **Un producto que vende bien en unas tiendas no vende mejor en otras.**
+  Dividiendo las 6 tiendas Type1 en dos grupos, la correlación de unidades de
+  cada producto entre grupos es 0.04, y de los productos en el top 20% de un
+  grupo solo el 20% repite en el otro (igual que el azar).
+- **Las categorías rinden igual en todos los formatos.** De 64 combinaciones
+  categoría × formato, solo 2 se desvían con |t| > 2 (se esperarían ~3 por
+  azar); el ANOVA dentro de cada formato da p entre 0.44 y 0.86.
+- **En ventas en Q, el producto solo importa por su precio.** Las unidades
+  son planas entre bandas de precio (16.0 a 16.7 en Type1), así que un
+  producto caro factura más por aritmética. El precio de un mismo producto
+  casi no varía entre tiendas (desviación de Q1.1), así que no se puede
+  estimar elasticidad.
+- **El tamaño y el tier no se pueden aislar.** Con 10 tiendas, casi cada
+  combinación formato × tamaño × tier es una sola tienda; dentro de Type1 las
+  unidades no cambian con el tamaño ni el tier (16.0 a 16.6). Además el
+  tamaño de OUT010, OUT017 y OUT045 fue imputado.
 
-## 5. Modelado
+Implicación: para planificar envíos, la información útil es el formato de la
+tienda. El producto aporta su tipo (perecedero o no), que define el costo de
+equivocarse, pero no su historial de ventas.
+
+## 5. Modelo de demanda promedio
 
 - **Línea base:** promedio de unidades por `Outlet_Type` (`BaselinePorGrupo`).
 - **Modelo:** Random Forest con one-hot de las variables categóricas.
@@ -116,54 +123,105 @@ original. Salidas: `importancia_shap.csv`, `efecto_tienda_shap.csv` y
   (0.5%) casi no influyen.
 - **Efecto de la tienda** (unidades por producto frente a la predicción
   promedio): OUT027 +11.1; las Type1 entre +0.6 y +1.2; OUT018 −1.5; las
-  Grocery −13.1. Es el mismo orden que la brecha de la sección 6.
+  Grocery −13.1.
 
-- **Ajuste de hiperparámetros:** no se hizo. Con la CV mostrando que el
-  Random Forest no supera al promedio por formato, el techo lo pone la señal
-  disponible en los datos, no los hiperparámetros.
+El ajuste de hiperparámetros se hace sobre el modelo cuantílico (sección 6.3),
+que es el que responde la pregunta.
 
-## 6. Brecha entre ventas reales y potenciales
+## 6. Asignación de inventario
 
-**Definición.** El potencial de una tienda es lo que vendería un Supermarket
-Type1 (el formato estándar, 6 de las 10 tiendas) con su mismo surtido. Se
-estima con un modelo entrenado solo con atributos del producto (precio, peso,
-tipo, contenido de grasa y categoría) y solo con tiendas Type1. Cada tienda
-Type1 se compara contra las **otras cinco**, nunca contra sí misma, para que
-la predicción sea fuera de muestra. La visibilidad se excluye porque la decide
-cada tienda.
+Pipeline `asignacion_inventario`. Toda la evaluación usa validación cruzada de
+5 folds **agrupada por producto**: cada producto se evalúa con reglas y
+modelos que nunca lo vieron, como pasaría con un producto nuevo. Se compara lo
+que cada regla habría enviado contra las unidades realmente vendidas.
 
-`brecha = unidades reales − unidades esperadas`; en Q se multiplica por el
-precio. El estadístico t mide si la brecha es consistente entre productos
-(|t| > 2) o si es ruido.
+Perecederos (32% de las filas): Dairy, Fruits and Vegetables, Breads, Meat,
+Seafood y Breakfast (configurable en `parameters_asignacion_inventario.yml`).
 
-Pipeline `analisis_brecha`: `estimar_potencial` →
-`brecha_por_tienda` / `brecha_por_formato` / `brecha_tienda_categoria`.
+### 6.1 ¿Con qué información planificar? (`comparacion_reglas.json`)
 
-| Tienda | Formato | Brecha | Brecha en Q | % productos bajo lo esperado | t |
-|---|---|---|---|---|---|
-| OUT027 | Type3 | +62.9% | +1,309,624 | 13% | 33.1 |
-| OUT035 | Type1 | +4.9% | +108,253 | 48% | 3.3 |
-| OUT017 | Type1 | +2.4% | +59,675 | 52% | 1.6 |
-| OUT049 | Type1 | +2.1% | +51,811 | 52% | 1.5 |
-| OUT013 | Type1 | −2.6% | −24,933 | 55% | −1.8 |
-| OUT046 | Type1 | −1.2% | −61,213 | 55% | −0.8 |
-| OUT045 | Type1 | −5.5% | −134,149 | 59% | −4.0 |
-| OUT018 | Type2 | −15.1% | −302,579 | 69% | −11.6 |
-| OUT019 | Grocery | −85.1% | −1,033,673 | 100% | −206 |
-| OUT010 | Grocery | −85.4% | −1,092,165 | 100% | −216 |
+| Regla (costos iguales) | MAE (u/producto) | Unidades mal asignadas |
+|---|---|---|
+| Repartir igual entre tiendas | 7.32 | 47.5% |
+| Historial del producto en las otras tiendas, escalado al formato | 5.87 | 38.0% |
+| **Promedio del formato** | **5.31** | **34.4%** |
 
-**Lectura:**
+Planificar con el historial del producto, que es lo intuitivo, **asigna mal
+9.5% más unidades** que usar solo el formato de la tienda.
 
-- **OUT018 (Type2)** es la tienda con brecha más clara frente a un formato
-  comparable: vende 15% menos que un Type1 con el mismo surtido, y la brecha
-  aparece en 13 de sus 16 categorías con |t| > 2. Es un problema de la
-  tienda, no de una categoría.
-- **Dentro de Type1**, OUT045 (−5.5%) y OUT035 (+4.9%) son las únicas con
-  brecha consistente (|t| > 3). Las demás están dentro del ruido.
-- **Las Grocery** no son comparables con un supermercado: su −85% refleja el
-  formato y no un mal desempeño. Sirve para dimensionar cuánto valdría
-  convertirlas.
-- **Tienda × categoría:** de las 96 celdas Type1, 15 tienen |t| > 2, frente
-  a unas 5 que se esperarían por azar. Hay alguna señal, pero con tantas
-  comparaciones las celdas individuales hay que tomarlas como hipótesis a
-  revisar, no como conclusiones.
+### 6.2 Costos asimétricos: enviar un cuantil, no el promedio
+
+Si faltar y sobrar cuestan distinto, enviar el promedio no es óptimo. La
+cantidad que minimiza el costo esperado es el cuantil
+`costo_faltante / (costo_faltante + costo_sobrante)` de la demanda:
+
+- Perecedero, sobrar cuesta 3 veces más → cuantil 0.25 (enviar poco).
+- No perecedero, faltar cuesta 3 veces más → cuantil 0.75 (enviar con colchón).
+
+Las proporciones 1:3 y 3:1 son supuestos para ilustrar; no son costos reales
+de BigMart. La sección 6.4 muestra la regla para cualquier proporción.
+
+### 6.3 Modelos y ajuste de hiperparámetros
+
+| Regla | Descripción |
+|---|---|
+| Promedio por formato (línea base) | Envía las unidades promedio del formato. |
+| Cuantil por formato | Envía el cuantil de las unidades del formato y tipo de producto. |
+| GBM cuantílico | `HistGradientBoostingRegressor` con pérdida cuantílica y todas las variables de tienda y producto. |
+
+Ajuste del GBM (`ajuste_cuantilico.json`): grilla de 16 combinaciones de
+`max_depth`, `learning_rate`, `max_iter` y `min_samples_leaf`, con pérdida
+pinball en el cuantil 0.75. Mejor combinación: profundidad 3, tasa 0.03, 100
+iteraciones, 20 por hoja (pinball 2.228). La regla de cuantil por formato
+obtiene 2.217: **el modelo ajustado no supera a la regla simple**.
+
+Costo total por escenario (`costos_por_escenario.csv`):
+
+| Escenario | Cuantil por formato | GBM cuantílico |
+|---|---|---|
+| Costos iguales | −0.6% | +0.05% |
+| Faltar cuesta 3× | −16.5% | −16.1% |
+| Sobrar cuesta 3× | −25.2% | −24.8% |
+| **Según tipo de producto (recomendado)** | **−18.8%** | −18.5% |
+
+(Cambio de costo frente a enviar el promedio del formato.)
+
+**Modelo elegido: cuantil por formato y tipo de producto.** Empata o supera
+al GBM, se explica en una tabla de 8 filas, no necesita reentrenar un modelo
+complejo y es fácil de implementar en el sistema de reposición. Se guarda en
+`data/06_models/modelo_asignacion.pkl`.
+
+### 6.4 Sensibilidad a los costos (`sensibilidad_costos.csv`)
+
+| Faltar ÷ sobrar | 0.2 | 0.33 | 0.5 | 1 | 2 | 3 | 5 |
+|---|---|---|---|---|---|---|---|
+| Cuantil óptimo | 0.17 | 0.25 | 0.33 | 0.50 | 0.67 | 0.75 | 0.83 |
+| Ahorro vs. promedio | 42.9% | 25.6% | 12.5% | 0.6% | 6.2% | 16.5% | 33.0% |
+
+El ahorro crece cuanto más desiguales son los costos. Si BigMart estima sus
+costos reales, la tabla da el cuantil a usar sin rehacer el análisis.
+
+### 6.5 Regla recomendada (`tabla_asignacion.csv`)
+
+Unidades a enviar por producto:
+
+| Formato | Perecedero (cuantil 0.25) | No perecedero (cuantil 0.75) | Promedio vendido |
+|---|---|---|---|
+| Grocery Store | 1.0 | 3.0 | 2.4 |
+| Supermarket Type1 | 11.0 | 21.0 | 16.2–16.4 |
+| Supermarket Type2 | 9.3 | 17.8 | 13.8–14.1 |
+| Supermarket Type3 | 20.9 | 32.1 | 26.1–27.7 |
+
+### 6.6 Limitaciones
+
+- **Ventas ≠ demanda.** Sin datos de inventario ni quiebres de stock, se
+  asume que lo vendido refleja la demanda; si hubo quiebres, la demanda real
+  es mayor.
+- **Costos supuestos.** Las proporciones de costo son ilustrativas; por eso
+  se incluye la sensibilidad.
+- **Un solo período.** El dataset no tiene fechas: no se modela
+  estacionalidad ni tendencia.
+- **Formatos con una sola tienda.** Type2 (OUT018) y Type3 (OUT027) son una
+  tienda cada uno; su regla refleja a esa tienda.
+- **Clasificación de perecederos** por `Item_Type`; es una aproximación
+  (p. ej. `Breakfast` mezcla cereales y lácteos).

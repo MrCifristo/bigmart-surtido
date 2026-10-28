@@ -9,7 +9,7 @@ def test_pipelines_registrados():
     assert {
         "data_processing",
         "data_science",
-        "analisis_brecha",
+        "asignacion_inventario",
         "__default__",
     } <= set(pipelines)
     nodos = {n.name for n in pipelines["__default__"].nodes}
@@ -19,5 +19,5 @@ def test_pipelines_registrados():
         "evaluar_modelos",
         "validacion_cruzada",
         "explicar_modelo",
-        "estimar_potencial",
+        "construir_regla_asignacion",
     } <= nodos

@@ -1,0 +1,61 @@
+asignacion_inventario:
+  # Unidades por producto y tienda (ventas / precio).
+  target: Item_Units
+  # Validación agrupada por producto: los productos evaluados nunca se vieron al
+  # entrenar, como un producto nuevo. Debe ser Item_Identifier para que la regla
+  # "historial del producto" use las otras tiendas del mismo producto.
+  grupo_validacion: Item_Identifier
+  cv_folds: 5
+  random_state: 42
+  # Tipos de producto que se echan a perder: sobrar cuesta más que faltar.
+  categorias_perecederas:
+    - Dairy
+    - Fruits and Vegetables
+    - Breads
+    - Meat
+    - Seafood
+    - Breakfast
+  # Variables del modelo cuantílico (Gradient Boosting).
+  features_numericas:
+    - Item_MRP
+    - Item_Weight
+    - Item_Visibility
+    - Outlet_Age
+  features_categoricas:
+    - Outlet_Type
+    - Outlet_Identifier
+    - Outlet_Size
+    - Outlet_Location_Type
+    - Item_Type
+    - Item_Fat_Content
+    - Tipo_Producto
+  # Ajuste de hiperparámetros del modelo cuantílico (pérdida pinball en este cuantil).
+  cuantil_ajuste: 0.75
+  grilla_hiperparametros:
+    max_depth: [3, 6]
+    learning_rate: [0.03, 0.1]
+    max_iter: [100, 300]
+    min_samples_leaf: [20, 100]
+  # Costos relativos de faltar (venta perdida) y sobrar (merma o bodega) por unidad.
+  # No son datos de BigMart: son supuestos, y el análisis de sensibilidad muestra
+  # la regla para cualquier proporción.
+  escenarios_costo:
+    - nombre: Costos iguales
+      faltante: 1
+      sobrante: 1
+    - nombre: Faltar cuesta 3 veces más
+      faltante: 3
+      sobrante: 1
+    - nombre: Sobrar cuesta 3 veces más
+      faltante: 1
+      sobrante: 3
+  # Costos de la regla recomendada; también se evalúa como escenario.
+  costos_por_tipo:
+    Perecedero:
+      faltante: 1
+      sobrante: 3
+    No perecedero:
+      faltante: 3
+      sobrante: 1
+  # Proporciones costo de faltar / costo de sobrar del análisis de sensibilidad.
+  ratios_sensibilidad: [0.2, 0.25, 0.33, 0.5, 0.75, 1, 1.5, 2, 3, 4, 5]

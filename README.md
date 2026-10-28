@@ -1,4 +1,4 @@
-# BigMart: surtido y desempeño de tiendas
+# BigMart: asignación de inventario por producto y tienda
 
 [![Powered by Kedro](https://img.shields.io/badge/powered_by-kedro-ffc900?logo=kedro)](https://kedro.org)
 
@@ -6,7 +6,8 @@ Proyecto 1 de *Machine Learning for Business* (UFM, 2026), por George Albadr y M
 
 Aplica Machine Learning, con la metodología CRISP-DM, al dataset
 [BigMart Sales](https://www.kaggle.com/datasets/yasserh/bigmartsalesdataset) para
-apoyar las decisiones de surtido y de gestión de tiendas de una cadena de retail.
+decidir cuántas unidades de cada producto enviar a cada tienda cuando faltar y
+sobrar no cuestan lo mismo (regresión cuantílica con costos asimétricos).
 La pregunta de negocio y las decisiones de diseño están en
 [`docs/decisiones.md`](docs/decisiones.md).
 
@@ -17,12 +18,12 @@ conf/base/
   catalog.yml                      # datasets de entrada y salida
   parameters_data_processing.yml   # parámetros de limpieza
   parameters_data_science.yml      # objetivo, features, hiperparámetros
-  parameters_analisis_brecha.yml   # formato de referencia y niveles de la brecha
+  parameters_asignacion_inventario.yml  # perecederos, costos, grilla y sensibilidad
 data/01_raw/bigmart.csv            # dataset original (Kaggle)
 src/bigmart_surtido/pipelines/
   data_processing/                 # carga, limpieza y features
   data_science/                    # división, línea base, modelo, evaluación, CV y SHAP
-  analisis_brecha/                 # brecha real vs. potencial por tienda y categoría
+  asignacion_inventario/           # unidades a enviar por producto y tienda con costos asimétricos
 tests/                             # pruebas con pytest
 .github/workflows/ci.yml           # Ruff + pruebas + kedro run en cada push/PR
 ```
@@ -33,7 +34,7 @@ tests/                             # pruebas con pytest
 |---|---|---|
 | `data_processing` | `generar_reporte_calidad` → `normalizar_datos` → `imputar_faltantes` → `crear_features` | `data/08_reporting/reporte_calidad_datos.json`, `data/04_feature/bigmart_features.csv` |
 | `data_science` | `dividir_datos` → `entrenar_baseline` / `entrenar_modelo` → `evaluar_modelos`, `validacion_cruzada`, `explicar_modelo` | `data/06_models/*.pkl`, `data/08_reporting/metricas*.json`, `data/08_reporting/*shap*` |
-| `analisis_brecha` | `estimar_potencial` → `brecha_por_tienda` / `brecha_por_formato` / `brecha_tienda_categoria` | `data/07_model_output/ventas_esperadas.csv`, `data/08_reporting/brecha_*.csv` |
+| `asignacion_inventario` | `marcar_perecederos` → `comparar_reglas_planificacion`, `ajustar_modelo_cuantilico` → `evaluar_escenarios_costo`, `analizar_sensibilidad`, `construir_regla_asignacion` → `graficar_asignacion` | `data/06_models/modelo_asignacion.pkl`, `data/07_model_output/tabla_asignacion.csv`, `data/08_reporting/{comparacion_reglas,ajuste_cuantilico}.json`, `costos_por_escenario.csv`, `sensibilidad_costos.csv`, `asignacion_inventario.png` |
 
 ## Instalación
 
@@ -51,7 +52,7 @@ pip install -e ".[dev]"
 kedro run                              # pipeline completo
 kedro run --pipeline data_processing   # solo limpieza
 kedro run --pipeline data_science      # solo modelado (requiere data_processing)
-kedro run --pipeline analisis_brecha   # solo brecha por tienda (requiere data_processing)
+kedro run --pipeline asignacion_inventario  # solo asignación de inventario (requiere data_processing)
 ```
 
 Los parámetros (variable objetivo, features, hiperparámetros, tratamiento de

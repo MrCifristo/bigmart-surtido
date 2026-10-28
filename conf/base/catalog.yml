@@ -51,10 +51,14 @@ modelo:
   type: pickle.PickleDataset
   filepath: data/06_models/modelo.pkl
 
+modelo_asignacion:
+  type: pickle.PickleDataset
+  filepath: data/06_models/modelo_asignacion.pkl
+
 # --- 07 model output ------------------------------------------------------
-ventas_esperadas:
+tabla_asignacion:
   type: pandas.CSVDataset
-  filepath: data/07_model_output/ventas_esperadas.csv
+  filepath: data/07_model_output/tabla_asignacion.csv
 
 # --- 08 reporting ---------------------------------------------------------
 metricas:
@@ -64,18 +68,6 @@ metricas:
 metricas_cv:
   type: json.JSONDataset
   filepath: data/08_reporting/metricas_cv.json
-
-brecha_por_tienda:
-  type: pandas.CSVDataset
-  filepath: data/08_reporting/brecha_por_tienda.csv
-
-brecha_por_formato:
-  type: pandas.CSVDataset
-  filepath: data/08_reporting/brecha_por_formato.csv
-
-brecha_tienda_categoria:
-  type: pandas.CSVDataset
-  filepath: data/08_reporting/brecha_tienda_categoria.csv
 
 importancia_shap:
   type: pandas.CSVDataset
@@ -88,5 +80,27 @@ efecto_tienda_shap:
 grafica_shap:
   type: matplotlib.MatplotlibDataset
   filepath: data/08_reporting/shap_importancia.png
+  save_args:
+    dpi: 200
+
+comparacion_reglas:
+  type: json.JSONDataset
+  filepath: data/08_reporting/comparacion_reglas.json
+
+ajuste_cuantilico:
+  type: json.JSONDataset
+  filepath: data/08_reporting/ajuste_cuantilico.json
+
+costos_por_escenario:
+  type: pandas.CSVDataset
+  filepath: data/08_reporting/costos_por_escenario.csv
+
+sensibilidad_costos:
+  type: pandas.CSVDataset
+  filepath: data/08_reporting/sensibilidad_costos.csv
+
+grafica_asignacion:
+  type: matplotlib.MatplotlibDataset
+  filepath: data/08_reporting/asignacion_inventario.png
   save_args:
     dpi: 200

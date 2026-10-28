@@ -1,4 +1,4 @@
-"""Pipeline ``analisis_brecha``."""
+"""Pipeline ``asignacion_inventario``."""
 
 from .pipeline import create_pipeline
 
