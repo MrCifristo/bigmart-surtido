@@ -28,6 +28,9 @@ tests/                             # pruebas con pytest
 .github/workflows/ci.yml           # Ruff + pruebas + kedro run en cada push/PR
 ```
 
+El análisis exploratorio está en `notebooks/01_exploracion.ipynb`; para abrirlo,
+instala `pip install -e ".[notebooks]"` y ejecuta `kedro jupyter lab`.
+
 ### Pipelines
 
 | Pipeline | Nodos | Salidas principales |
