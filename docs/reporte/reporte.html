@@ -59,7 +59,7 @@
 
 <div class="resumen">
   <p><b>Pregunta.</b> ¿Cuántas unidades de cada producto conviene enviar a cada tienda, considerando que en los perecederos cuesta más que sobre y en los no perecederos cuesta más que falte?</p>
-  <p><b>Respuesta.</b> Conviene planificar por el <b>formato de la tienda</b> y no por el historial de cada producto: este último asigna mal 9.5% más unidades. Con costos asimétricos, en lugar de enviar el promedio se envía un nivel de cobertura distinto según el tipo de producto (poco en perecederos, con colchón en no perecederos). Esta regla <b>reduce el costo de asignación 18.8%</b> frente a enviar el promedio, cabe en una tabla de 8 filas y empata con un modelo de Gradient Boosting ajustado.</p>
+  <p><b>Respuesta.</b> Conviene planificar por el <b>formato de la tienda</b> y no por el historial de cada producto: comparado contra las unidades realmente vendidas, el historial <b>asigna mal 9.5% más unidades</b>, sin necesidad de suponer ningún costo. Cuando sobrar y faltar cuestan distinto, además conviene enviar un nivel de cobertura según el tipo de producto (poco en perecederos, con colchón en no perecederos). Cuánto se ahorra con eso depende de esos costos, que el dataset no trae: si sobrar cuesta 3 veces más en perecederos y faltar 3 veces más en los demás, el costo baja 18.8%; con costos iguales, solo 0.6%.</p>
 </div>
 
 <h2>1. Introducción</h2>
@@ -73,7 +73,7 @@
   <tr><td>Pregunta de negocio</td><td>¿Cuántas unidades de cada producto conviene enviar a cada tienda, considerando que en los perecederos cuesta más que sobre y en los no perecederos cuesta más que falte?</td></tr>
   <tr><td>Objetivo analítico</td><td>Regresión de las unidades vendidas por producto y tienda: primero a la media, para saber qué información sirve para planificar; después <b>regresión cuantílica</b>, porque con costos asimétricos la cantidad óptima es un cuantil de la demanda.</td></tr>
   <tr><td>Métrica de éxito</td><td>Técnica: error medio absoluto (MAE) y pérdida pinball con validación cruzada por producto. De negocio: unidades mal asignadas y costo total, medidos contra las <b>unidades realmente vendidas</b>, frente a la línea base "enviar el promedio del formato".</td></tr>
-  <tr><td>Impacto estimado</td><td>18.8% menos costo de asignación con la regla recomendada, y 4,763 unidades menos mal asignadas (de 131,473 vendidas) al planificar por formato en vez de por historial de producto.</td></tr>
+  <tr><td>Impacto estimado</td><td>4,763 unidades menos mal asignadas (de 131,473 vendidas, −9.5%) al planificar por formato en vez de por historial de producto; este resultado no depende de supuestos. Con costos asimétricos, el ahorro adicional depende de la proporción de costos: de 0.6% (costos iguales) a 18.8% en el escenario ilustrativo 3:1 y hasta 43% con costos muy desiguales.</td></tr>
 </table>
 <p>Elegimos esta pregunta porque su resultado se puede verificar con lo que realmente pasó: cada regla se compara contra las unidades vendidas. Una alternativa que consideramos (medir si cada tienda vende "por debajo de su potencial") dependía de un potencial que definíamos nosotros y que no se observa en los datos, por eso la descartamos.</p>
 
@@ -208,7 +208,7 @@
 </ul>
 
 <h2>10. Conclusión</h2>
-<p>Respondimos la pregunta de cuántas unidades enviar con una regla simple y verificable: planificar por formato de tienda y elegir el nivel de cobertura según el tipo de producto. Evaluada siempre con productos que no se usaron para construirla y contra las unidades realmente vendidas, la regla reduce el costo de asignación 18.8% frente a enviar el promedio, y planificar por formato asigna mal 9.5% menos unidades que planificar por producto. Los modelos más complejos (Random Forest y Gradient Boosting cuantílico ajustado) no superan a esta regla, lo que confirma que la información útil está en el formato de la tienda y en el costo de equivocarse. El siguiente paso es estimar los costos reales y validar la regla con un piloto.</p>
+<p>Respondimos la pregunta de cuántas unidades enviar con una regla simple y verificable: planificar por formato de tienda y elegir el nivel de cobertura según el tipo de producto. Evaluada siempre con productos que no se usaron para construirla y contra las unidades realmente vendidas, planificar por formato asigna mal 9.5% menos unidades que planificar por producto, un resultado que no depende de supuestos. Elegir el nivel de cobertura según el tipo de producto agrega un ahorro que depende de los costos reales de BigMart: 18.8% si sobrar y faltar difieren 3 a 1, y casi nada si cuestan lo mismo. Los modelos más complejos (Random Forest y Gradient Boosting cuantílico ajustado) no superan a esta regla, lo que confirma que la información útil está en el formato de la tienda y en el costo de equivocarse. Por eso el siguiente paso es estimar esos costos y validar la regla con un piloto.</p>
 
 <h2>Referencias</h2>
 <p class="nota">
