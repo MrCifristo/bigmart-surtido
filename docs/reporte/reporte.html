@@ -106,6 +106,7 @@
   <li><b>La visibilidad no muestra efecto.</b> Comparando el mismo producto en distintas tiendas Type1, la correlación entre visibilidad y unidades es 0.01.</li>
   <li><b>El tamaño y la ubicación no se pueden aislar.</b> Con 10 tiendas, casi cada combinación de formato, tamaño y ubicación es una sola tienda. Dentro de las Type1, las unidades no cambian con el tamaño ni con la ubicación (entre 16.0 y 16.6).</li>
 </ul>
+<p>Cada hallazgo se reproduce, con su código y sus gráficas, en el notebook <code>notebooks/01_exploracion.ipynb</code> del repositorio.</p>
 
 <h2>4. Métodos</h2>
 <h3>Arquitectura de la solución</h3>
@@ -116,7 +117,7 @@
   <div class="flecha">→</div>
   <div class="paso final"><b>asignacion_inventario</b>Comparación de reglas, ajuste del modelo cuantílico, escenarios de costo, sensibilidad y regla final.</div>
 </div>
-<p class="nota">Proyecto Kedro con catálogo de datos y parámetros configurables (<code>conf/base/</code>); se ejecuta con <code>kedro run</code>. GitHub Actions corre Ruff, 23 pruebas automatizadas y el pipeline completo en cada push.</p>
+<p class="nota">Proyecto Kedro con catálogo de datos y parámetros configurables (<code>conf/base/</code>); se ejecuta con <code>kedro run</code>. GitHub Actions corre Ruff, 43 pruebas automatizadas y el pipeline completo en cada push.</p>
 
 <h3>Validación: siempre con productos que el modelo no vio</h3>
 <p>Toda la evaluación usa validación cruzada de 5 particiones <b>agrupada por producto</b>: todas las filas de un producto quedan del mismo lado, así que cada producto se evalúa con reglas que nunca lo vieron, como pasaría con un producto nuevo. Lo que cada regla habría enviado se compara contra las unidades que realmente se vendieron.</p>
