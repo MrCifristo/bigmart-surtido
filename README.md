@@ -21,7 +21,7 @@ conf/base/
   parameters_asignacion_inventario.yml  # perecederos, costos, grilla y sensibilidad
 data/01_raw/bigmart.csv            # dataset original (Kaggle)
 src/bigmart_surtido/pipelines/
-  data_processing/                 # carga, limpieza y features
+  data_processing/                 # carga, limpieza, features y gráfica exploratoria
   data_science/                    # división, línea base, modelo, evaluación, CV y SHAP
   asignacion_inventario/           # unidades a enviar por producto y tienda con costos asimétricos
 tests/                             # pruebas con pytest
@@ -57,6 +57,17 @@ kedro run --pipeline asignacion_inventario  # solo asignación de inventario (re
 
 Los parámetros (variable objetivo, features, hiperparámetros, tratamiento de
 outliers) se cambian en `conf/base/parameters_*.yml`, sin tocar el código.
+
+## Reporte
+
+El reporte final está en [`docs/reporte/reporte.pdf`](docs/reporte/reporte.pdf). Su fuente,
+`docs/reporte/reporte.html`, usa las gráficas que genera `kedro run` en
+`data/08_reporting/`. Para regenerarlo (requiere [WeasyPrint](https://weasyprint.org)):
+
+```bash
+kedro run
+weasyprint docs/reporte/reporte.html docs/reporte/reporte.pdf
+```
 
 ## Calidad y pruebas
 

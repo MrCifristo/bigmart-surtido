@@ -5,6 +5,17 @@ from __future__ import annotations
 from typing import Any
 
 import pandas as pd
+from matplotlib.figure import Figure
+
+from bigmart_surtido.estilo import (
+    COLOR_FONDO,
+    COLOR_PRODUCTO,
+    COLOR_TEXTO,
+    COLOR_TEXTO_SECUNDARIO,
+    COLOR_TIENDA,
+    estilo_ejes,
+    titulo,
+)
 
 COLUMNAS_TEXTO = [
     "Item_Identifier",
@@ -133,3 +144,79 @@ def crear_features(df: pd.DataFrame, anio_referencia: int) -> pd.DataFrame:
     df["Outlet_Age"] = anio_referencia - df["Outlet_Establishment_Year"]
     df["Item_Units"] = df["Item_Outlet_Sales"] / df["Item_MRP"]
     return df
+
+
+def _barras_con_valores(ax, etiquetas, valores, color, formato: str) -> None:
+    ax.bar(etiquetas, valores, color=color, width=0.65)
+    for x, valor in enumerate(valores):
+        ax.text(
+            x,
+            valor * 1.02,
+            formato.format(valor),
+            ha="center",
+            va="bottom",
+            fontsize=9,
+            color=COLOR_TEXTO,
+        )
+
+
+def graficar_exploracion(df: pd.DataFrame) -> Figure:
+    """Resume los dos hallazgos centrales del análisis exploratorio.
+
+    1. Las unidades vendidas por producto dependen del formato de la tienda.
+    2. El precio no cambia las unidades vendidas, solo infla las ventas en Q.
+
+    Args:
+        df: Dataset con features (incluye ``Item_Units``).
+
+    Returns:
+        Figura de tres paneles.
+    """
+    figura = Figure(figsize=(14, 4.8), facecolor=COLOR_FONDO, layout="constrained")
+    ax_formato, ax_unidades, ax_ventas = figura.subplots(1, 3, width_ratios=[1.3, 1, 1])
+    for ax in (ax_formato, ax_unidades, ax_ventas):
+        estilo_ejes(ax)
+
+    orden = df.groupby("Outlet_Type")["Item_Units"].median().sort_values().index
+    cajas = ax_formato.boxplot(
+        [df.loc[df["Outlet_Type"] == f, "Item_Units"] for f in orden],
+        tick_labels=[f.replace("Supermarket ", "Super ") for f in orden],
+        patch_artist=True,
+        widths=0.55,
+        showfliers=False,
+        medianprops={"color": COLOR_FONDO, "linewidth": 2},
+        whiskerprops={"color": COLOR_TEXTO_SECUNDARIO},
+        capprops={"color": COLOR_TEXTO_SECUNDARIO},
+    )
+    for caja in cajas["boxes"]:
+        caja.set(facecolor=COLOR_TIENDA, edgecolor=COLOR_TIENDA)
+    ax_formato.set_ylabel(
+        "Unidades vendidas por producto", color=COLOR_TEXTO_SECUNDARIO
+    )
+    titulo(ax_formato, "El formato de la tienda define la demanda")
+
+    bandas = pd.qcut(df["Item_MRP"], 4, labels=["Q1 barato", "Q2", "Q3", "Q4 caro"])
+    por_banda = df.groupby(bandas, observed=True)[["Item_Units", "Item_Outlet_Sales"]]
+    promedios = por_banda.mean()
+    _barras_con_valores(
+        ax_unidades,
+        promedios.index.astype(str),
+        promedios["Item_Units"],
+        COLOR_TIENDA,
+        "{:.1f}",
+    )
+    ax_unidades.set_ylabel("Unidades promedio", color=COLOR_TEXTO_SECUNDARIO)
+    ax_unidades.set_xlabel("Cuartil de precio", color=COLOR_TEXTO_SECUNDARIO)
+    titulo(ax_unidades, "El precio no cambia las unidades…")
+
+    _barras_con_valores(
+        ax_ventas,
+        promedios.index.astype(str),
+        promedios["Item_Outlet_Sales"],
+        COLOR_PRODUCTO,
+        "Q{:,.0f}",
+    )
+    ax_ventas.set_ylabel("Ventas promedio (Q)", color=COLOR_TEXTO_SECUNDARIO)
+    ax_ventas.set_xlabel("Cuartil de precio", color=COLOR_TEXTO_SECUNDARIO)
+    titulo(ax_ventas, "…solo infla las ventas en Q")
+    return figura

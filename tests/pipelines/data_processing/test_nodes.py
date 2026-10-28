@@ -4,6 +4,7 @@ import pytest
 from bigmart_surtido.pipelines.data_processing.nodes import (
     crear_features,
     generar_reporte_calidad,
+    graficar_exploracion,
     imputar_faltantes,
     normalizar_datos,
 )
@@ -67,3 +68,9 @@ def test_crear_features_unidades_y_antiguedad(normalizado):
     features = crear_features(imputar_faltantes(normalizado, 0.99), 2013)
     assert features.loc[0, "Outlet_Age"] == 14
     assert features.loc[0, "Item_Units"] == pytest.approx(3735.1 / 249.8)
+
+
+def test_graficar_exploracion(normalizado):
+    features = crear_features(imputar_faltantes(normalizado, 0.99), 2013)
+    figura = graficar_exploracion(features)
+    assert len(figura.axes) == 3

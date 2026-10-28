@@ -25,6 +25,12 @@ bigmart_features:
   type: pandas.CSVDataset
   filepath: data/04_feature/bigmart_features.csv
 
+grafica_exploracion:
+  type: matplotlib.MatplotlibDataset
+  filepath: data/08_reporting/exploracion.png
+  save_args:
+    dpi: 200
+
 # --- 05 model input -------------------------------------------------------
 X_train:
   type: pandas.CSVDataset

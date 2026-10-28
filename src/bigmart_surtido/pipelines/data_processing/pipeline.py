@@ -5,6 +5,7 @@ from kedro.pipeline import Node, Pipeline
 from .nodes import (
     crear_features,
     generar_reporte_calidad,
+    graficar_exploracion,
     imputar_faltantes,
     normalizar_datos,
 )
@@ -44,6 +45,12 @@ def create_pipeline(**kwargs) -> Pipeline:
                 inputs=["bigmart_limpio", "params:data_processing.anio_referencia"],
                 outputs="bigmart_features",
                 name="crear_features",
+            ),
+            Node(
+                func=graficar_exploracion,
+                inputs="bigmart_features",
+                outputs="grafica_exploracion",
+                name="graficar_exploracion",
             ),
         ]
     )

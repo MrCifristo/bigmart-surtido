@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>BigMart: cuántas unidades enviar a cada tienda</title>
+<style>
+  @page { size: letter; margin: 2cm 2.1cm 2cm 2.1cm;
+          @bottom-right { content: counter(page); font: 9pt "Helvetica Neue", Arial, sans-serif; color: #52514e; } }
+  :root { --tinta: #0b0b0b; --tinta-2: #52514e; --azul: #2a78d6; --naranja: #eb6834;
+          --linea: #d8d7d2; --fondo-suave: #f3f2ee; }
+  html { font: 10.5pt/1.5 Charter, "Bitstream Charter", Georgia, serif; color: var(--tinta); font-variant-numeric: lining-nums; }
+  body { margin: 0; background: #fff; }
+  h1, h2, h3, .portada, table, figcaption, .nota, .flujo { font-family: "Helvetica Neue", Arial, sans-serif; }
+  h1 { font-size: 21pt; line-height: 1.2; margin: 0 0 6pt; }
+  h2 { font-size: 13.5pt; margin: 20pt 0 6pt; padding-bottom: 3pt; border-bottom: 1.5px solid var(--tinta); break-after: avoid; }
+  h3 { font-size: 11pt; margin: 12pt 0 4pt; break-after: avoid; }
+  p { margin: 0 0 7pt; text-align: justify; hyphens: auto; }
+  ul, ol { margin: 0 0 8pt; padding-left: 18pt; }
+  li { margin-bottom: 3pt; }
+  .portada { border-bottom: 1px solid var(--linea); padding-bottom: 10pt; margin-bottom: 4pt; }
+  .portada .curso { font-size: 9.5pt; color: var(--tinta-2); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6pt; }
+  .portada .autores { font-size: 10.5pt; margin-top: 6pt; }
+  .portada .meta { font-size: 9pt; color: var(--tinta-2); }
+  .resumen { background: var(--fondo-suave); padding: 9pt 12pt; margin: 12pt 0 4pt; border-left: 3px solid var(--azul); }
+  .resumen p { margin: 0 0 4pt; }
+  .resumen p:last-child { margin: 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 8.8pt; margin: 6pt 0 10pt; break-inside: avoid; }
+  th { text-align: left; font-weight: 600; border-bottom: 1.2px solid var(--tinta); padding: 4pt 6pt; vertical-align: bottom; }
+  td { border-bottom: 1px solid var(--linea); padding: 3.5pt 6pt; vertical-align: top; }
+  td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  table.partible { break-inside: auto; }
+  tr { break-inside: avoid; }
+  tr.destacado td { font-weight: 600; background: #eef4fc; }
+  table.def td:first-child { width: 24%; font-weight: 600; }
+  figure { margin: 8pt 0 12pt; break-inside: avoid; }
+  figure img { width: 100%; display: block; }
+  figcaption { font-size: 8.6pt; color: var(--tinta-2); margin-top: 4pt; line-height: 1.4; }
+  figcaption b { color: var(--tinta); }
+  .nota { font-size: 8.6pt; color: var(--tinta-2); }
+  .formula { font-family: "Helvetica Neue", Arial, sans-serif; text-align: center; margin: 6pt 0 8pt; font-size: 10.5pt; }
+  .flujo { display: flex; align-items: stretch; gap: 0; margin: 8pt 0 4pt; font-size: 8.2pt; break-inside: avoid; }
+  .flujo .paso { flex: 1; border: 1px solid var(--linea); border-top: 3px solid var(--azul); padding: 5pt 6pt; background: #fff; }
+  .flujo .paso.final { border-top-color: var(--naranja); }
+  .flujo .paso b { display: block; font-size: 8.6pt; margin-bottom: 2pt; }
+  .flujo .flecha { align-self: center; padding: 0 4pt; color: var(--tinta-2); font-size: 11pt; }
+  .salto { break-before: page; }
+  a { color: var(--azul); text-decoration: none; }
+  code { font-family: Menlo, monospace; font-size: 8.6pt; }
+</style>
+</head>
+<body>
+
+<div class="portada">
+  <div class="curso">Machine Learning for Business · UFM · Proyecto 1</div>
+  <h1>BigMart: cuántas unidades enviar de cada producto a cada tienda cuando faltar y sobrar no cuestan lo mismo</h1>
+  <div class="autores">George Albadr y Milton Beltrán</div>
+  <div class="meta">28 de octubre de 2026 · Repositorio: <a href="https://github.com/MrCifristo/bigmart-surtido">github.com/MrCifristo/bigmart-surtido</a></div>
+</div>
+
+<div class="resumen">
+  <p><b>Pregunta.</b> ¿Cuántas unidades de cada producto conviene enviar a cada tienda, considerando que en los perecederos cuesta más que sobre y en los no perecederos cuesta más que falte?</p>
+  <p><b>Respuesta.</b> Conviene planificar por el <b>formato de la tienda</b> y no por el historial de cada producto: este último asigna mal 9.5% más unidades. Con costos asimétricos, en lugar de enviar el promedio se envía un nivel de cobertura distinto según el tipo de producto (poco en perecederos, con colchón en no perecederos). Esta regla <b>reduce el costo de asignación 18.8%</b> frente a enviar el promedio, cabe en una tabla de 8 filas y empata con un modelo de Gradient Boosting ajustado.</p>
+</div>
+
+<h2>1. Introducción</h2>
+<p>BigMart es una cadena de 10 tiendas que vende 1,559 productos en cuatro formatos: Grocery Store (tienda de barrio) y Supermarket Type1, Type2 y Type3. Cada semana, el centro de distribución decide cuántas unidades de cada producto mandar a cada tienda. Si manda de más, lo que sobra se echa a perder o ocupa bodega. Si manda de menos, el cliente no encuentra el producto y la venta se pierde.</p>
+<p>Este reporte usa los datos de ventas de BigMart para construir una regla de envío que minimice ese costo. Seguimos la metodología CRISP-DM, y todo el análisis está implementado en un proyecto Kedro reproducible, validado automáticamente con GitHub Actions.</p>
+
+<h2>2. Problema de negocio</h2>
+<table class="def partible">
+  <tr><td>Contexto</td><td>Enviar de más o de menos tiene costo, y ese costo no es simétrico. En un perecedero (lácteos, frutas, pan, carne) lo que sobra se tira, así que sobrar cuesta más. En un no perecedero (enlatados, limpieza) lo que sobra espera en bodega, pero lo que falta es venta perdida.</td></tr>
+  <tr><td>Stakeholder</td><td>Gerente de Logística / centro de distribución, que decide las unidades a enviar por producto y tienda.</td></tr>
+  <tr><td>Pregunta de negocio</td><td>¿Cuántas unidades de cada producto conviene enviar a cada tienda, considerando que en los perecederos cuesta más que sobre y en los no perecederos cuesta más que falte?</td></tr>
+  <tr><td>Objetivo analítico</td><td>Regresión de las unidades vendidas por producto y tienda: primero a la media, para saber qué información sirve para planificar; después <b>regresión cuantílica</b>, porque con costos asimétricos la cantidad óptima es un cuantil de la demanda.</td></tr>
+  <tr><td>Métrica de éxito</td><td>Técnica: error medio absoluto (MAE) y pérdida pinball con validación cruzada por producto. De negocio: unidades mal asignadas y costo total, medidos contra las <b>unidades realmente vendidas</b>, frente a la línea base "enviar el promedio del formato".</td></tr>
+  <tr><td>Impacto estimado</td><td>18.8% menos costo de asignación con la regla recomendada, y 4,763 unidades menos mal asignadas (de 131,473 vendidas) al planificar por formato en vez de por historial de producto.</td></tr>
+</table>
+<p>Elegimos esta pregunta porque su resultado se puede verificar con lo que realmente pasó: cada regla se compara contra las unidades vendidas. Una alternativa que consideramos (medir si cada tienda vende "por debajo de su potencial") dependía de un potencial que definíamos nosotros y que no se observa en los datos, por eso la descartamos.</p>
+
+<h2>3. Datos</h2>
+<p>Usamos el dataset <i>BigMart Sales</i> de Kaggle: 8,523 filas, una por producto y tienda, con 12 columnas. Las columnas describen el producto (identificador, peso, contenido de grasa, visibilidad en góndola, tipo y precio de lista) y la tienda (identificador, año de apertura, tamaño, tipo de ubicación y formato), y traen las ventas en quetzales. El dataset no tiene fechas, inventario ni costos.</p>
+
+<h3>Calidad y limpieza</h3>
+<table class="partible">
+  <tr><th>Problema</th><th class="n">Filas</th><th>Tratamiento</th></tr>
+  <tr><td>Peso faltante (solo en OUT027 y OUT019)</td><td class="n">1,463</td><td>El peso de un producto no cambia entre tiendas: se toma el del mismo producto en otra tienda (recupera 1,459); el resto, con la mediana.</td></tr>
+  <tr><td>Tamaño de tienda faltante (OUT010, OUT017, OUT045)</td><td class="n">2,410</td><td>Moda del tamaño entre tiendas del mismo formato.</td></tr>
+  <tr><td>Contenido de grasa con etiquetas inconsistentes (<code>LF</code>, <code>low fat</code>, <code>reg</code>)</td><td class="n">545</td><td>Se unifican en <i>Low Fat</i> y <i>Regular</i>; los no consumibles pasan a <i>No aplica</i>.</td></tr>
+  <tr><td>Visibilidad igual a cero (imposible si el producto se vendió)</td><td class="n">526</td><td>Se trata como faltante: media del producto, recortada en el percentil 99.</td></tr>
+  <tr><td>Ventas atípicas (regla IQR)</td><td class="n">186</td><td>Se conservan: son ventas reales de los formatos grandes.</td></tr>
+  <tr><td>Duplicados</td><td class="n">0</td><td>Se verifica en el pipeline por si aparecen.</td></tr>
+</table>
+
+<h3>Variable objetivo: unidades, no quetzales</h3>
+<p>Las ventas en quetzales son unidades × precio. Su correlación con el precio es 0.57, pero la de las unidades con el precio es 0.01. Como al centro de distribución le interesa cuántas unidades mandar, modelamos <b>unidades = ventas ÷ precio</b>. Así separamos la demanda del efecto mecánico del precio.</p>
+
+<h3>Hallazgos de la exploración</h3>
+<figure>
+  <img src="../../data/08_reporting/exploracion.png" alt="Unidades por formato y por cuartil de precio">
+  <figcaption><b>Figura 1.</b> Izquierda: unidades vendidas por producto según el formato de la tienda. Centro y derecha: unidades y ventas promedio por cuartil de precio. El precio no cambia cuántas unidades se venden; solo multiplica el monto.</figcaption>
+</figure>
+<ul>
+  <li><b>El formato define la demanda.</b> Para el mismo producto, un Type3 vende 1.66 veces las unidades de un Type1, un Type2 vende 0.81 veces y una Grocery 0.13 veces.</li>
+  <li><b>El producto no tiene "fuerza" propia.</b> Dividiendo las seis tiendas Type1 en dos grupos, la correlación de las unidades de cada producto entre grupos es 0.04. De los productos que están en el 20% más vendido de un grupo, solo el 20% lo está en el otro: lo mismo que se esperaría por azar.</li>
+  <li><b>Las categorías rinden igual en todos los formatos.</b> De 64 combinaciones de tipo de producto × formato, solo 2 se desvían de forma significativa (se esperarían unas 3 por azar).</li>
+  <li><b>La visibilidad no muestra efecto.</b> Comparando el mismo producto en distintas tiendas Type1, la correlación entre visibilidad y unidades es 0.01.</li>
+  <li><b>El tamaño y la ubicación no se pueden aislar.</b> Con 10 tiendas, casi cada combinación de formato, tamaño y ubicación es una sola tienda. Dentro de las Type1, las unidades no cambian con el tamaño ni con la ubicación (entre 16.0 y 16.6).</li>
+</ul>
+
+<h2>4. Métodos</h2>
+<h3>Arquitectura de la solución</h3>
+<div class="flujo">
+  <div class="paso"><b>data_processing</b>Reporte de calidad, normalización, imputación, variables derivadas y gráfica exploratoria.</div>
+  <div class="flecha">→</div>
+  <div class="paso"><b>data_science</b>Modelo de demanda promedio: línea base, Random Forest, validación cruzada y SHAP.</div>
+  <div class="flecha">→</div>
+  <div class="paso final"><b>asignacion_inventario</b>Comparación de reglas, ajuste del modelo cuantílico, escenarios de costo, sensibilidad y regla final.</div>
+</div>
+<p class="nota">Proyecto Kedro con catálogo de datos y parámetros configurables (<code>conf/base/</code>); se ejecuta con <code>kedro run</code>. GitHub Actions corre Ruff, 23 pruebas automatizadas y el pipeline completo en cada push.</p>
+
+<h3>Validación: siempre con productos que el modelo no vio</h3>
+<p>Toda la evaluación usa validación cruzada de 5 particiones <b>agrupada por producto</b>: todas las filas de un producto quedan del mismo lado, así que cada producto se evalúa con reglas que nunca lo vieron, como pasaría con un producto nuevo. Lo que cada regla habría enviado se compara contra las unidades que realmente se vendieron.</p>
+
+<h3>De pronosticar el promedio a elegir un nivel de cobertura</h3>
+<p>Si faltar y sobrar costaran lo mismo, lo mejor sería enviar el promedio (técnicamente, la mediana). Cuando no cuestan lo mismo, la cantidad que minimiza el costo esperado es un cuantil de la demanda. Es un resultado clásico de logística, conocido como el problema del vendedor de periódicos:</p>
+<p class="formula">cuantil óptimo = costo de faltar ÷ (costo de faltar + costo de sobrar)</p>
+<p>Si en un perecedero sobrar cuesta tres veces más que faltar, el cuantil óptimo es 0.25: conviene enviar lo que la tienda vende en el 25% de los casos. Si en un no perecedero faltar cuesta tres veces más, el cuantil es 0.75: se envía con colchón. Las proporciones 1:3 y 3:1 son supuestos ilustrativos, porque el dataset no trae costos. Por eso también presentamos un análisis de sensibilidad para cualquier proporción.</p>
+<p>Clasificamos como perecederos los tipos de producto Dairy, Fruits and Vegetables, Breads, Meat, Seafood y Breakfast (32% de las filas).</p>
+
+<h2>5. Selección del modelo</h2>
+<h3>Paso 1: ¿con qué información planificar?</h3>
+<p>Comparamos tres reglas con costos iguales. La de "historial del producto" es lo que haría un planificador intuitivo: mirar cuánto vendió ese producto en las otras tiendas y ajustarlo al formato de destino.</p>
+<table>
+  <tr><th>Regla</th><th class="n">Error medio (u/producto)</th><th class="n">Unidades mal asignadas</th></tr>
+  <tr><td>Repartir igual entre tiendas</td><td class="n">7.32</td><td class="n">47.5%</td></tr>
+  <tr><td>Historial del producto en otras tiendas</td><td class="n">5.87</td><td class="n">38.0%</td></tr>
+  <tr class="destacado"><td>Promedio del formato de la tienda</td><td class="n">5.31</td><td class="n">34.4%</td></tr>
+</table>
+<p>El historial del producto empeora el envío: agrega ruido. Un modelo de Random Forest con todas las variables (validación cruzada de 5 particiones) tampoco supera al promedio por formato: MAE de 5.36 contra 5.34 y R² de 0.417 contra 0.423, sin ganarle en ninguna de las 5 particiones.</p>
+
+<figure>
+  <img src="../../data/08_reporting/shap_importancia.png" alt="Importancia SHAP y efecto de cada tienda">
+  <figcaption><b>Figura 2.</b> Explicación del Random Forest con SHAP. Las características de la tienda concentran el 90% de la importancia; entre las del producto, la que más pesa es el precio, con 3.9%, y la visibilidad tiene 2.3%. La antigüedad de la tienda funciona como identificador (10 tiendas, 9 antigüedades distintas), no como un efecto propio.</figcaption>
+</figure>
+
+<h3>Paso 2: regla cuantílica vs. modelo cuantílico</h3>
+<p>Para elegir el nivel de cobertura comparamos tres reglas: la línea base (enviar el promedio del formato), el cuantil por formato y tipo de producto, y un <b>Gradient Boosting cuantílico</b> con todas las variables. Ajustamos los hiperparámetros del Gradient Boosting probando 16 combinaciones de profundidad, tasa de aprendizaje, iteraciones y tamaño mínimo de hoja, con la pérdida pinball, que es la métrica propia de un cuantil. La mejor combinación obtiene 2.228; la regla de cuantil por formato, 2.217.</p>
+<table>
+  <tr><th>Escenario de costos</th><th class="n">Cuantil por formato</th><th class="n">Gradient Boosting cuantílico</th></tr>
+  <tr><td>Costos iguales</td><td class="n">−0.6%</td><td class="n">+0.05%</td></tr>
+  <tr><td>Faltar cuesta 3 veces más</td><td class="n">−16.5%</td><td class="n">−16.1%</td></tr>
+  <tr><td>Sobrar cuesta 3 veces más</td><td class="n">−25.2%</td><td class="n">−24.8%</td></tr>
+  <tr class="destacado"><td>Según tipo de producto (recomendado)</td><td class="n">−18.8%</td><td class="n">−18.5%</td></tr>
+</table>
+<p class="nota">Cambio del costo total frente a enviar el promedio del formato. El costo pondera cada unidad faltante y sobrante por su costo relativo en cada escenario.</p>
+
+<p><b>Modelo elegido: cuantil por formato y tipo de producto.</b> Empata o supera al Gradient Boosting en todos los escenarios. Además cabe en una tabla de 8 filas que el gerente puede leer y auditar, no requiere reentrenar un modelo complejo y se puede cargar directamente en el sistema de reposición. Siguiendo la guía del proyecto, lo elegimos por utilidad, interpretabilidad y facilidad de implementación, y no solo por la métrica.</p>
+
+<h2>6. Resultados</h2>
+<figure>
+  <img src="../../data/08_reporting/asignacion_inventario.png" alt="Sensibilidad del ahorro y unidades a enviar">
+  <figcaption><b>Figura 3.</b> Izquierda: ahorro de la regla cuantílica frente a enviar el promedio, según la proporción entre el costo de faltar y el de sobrar. Derecha: unidades a enviar por producto según formato y tipo de producto; la marca negra es el promedio vendido.</figcaption>
+</figure>
+
+<h3>Regla de envío recomendada</h3>
+<table>
+  <tr><th>Formato</th><th class="n">Perecedero (cuantil 0.25)</th><th class="n">No perecedero (cuantil 0.75)</th><th class="n">Promedio vendido</th></tr>
+  <tr><td>Grocery Store</td><td class="n">1.0</td><td class="n">3.0</td><td class="n">2.4</td></tr>
+  <tr><td>Supermarket Type1</td><td class="n">11.0</td><td class="n">21.0</td><td class="n">16.2–16.4</td></tr>
+  <tr><td>Supermarket Type2</td><td class="n">9.3</td><td class="n">17.8</td><td class="n">13.8–14.1</td></tr>
+  <tr><td>Supermarket Type3</td><td class="n">20.9</td><td class="n">32.1</td><td class="n">26.1–27.7</td></tr>
+</table>
+<p class="nota">Unidades por producto y período. El promedio vendido aparece como rango porque difiere levemente entre perecederos y no perecederos.</p>
+
+<h3>Sensibilidad a los costos</h3>
+<table>
+  <tr><th>Costo de faltar ÷ costo de sobrar</th><th class="n">0.2</th><th class="n">0.33</th><th class="n">0.5</th><th class="n">1</th><th class="n">2</th><th class="n">3</th><th class="n">5</th></tr>
+  <tr><td>Cuantil óptimo</td><td class="n">0.17</td><td class="n">0.25</td><td class="n">0.33</td><td class="n">0.50</td><td class="n">0.67</td><td class="n">0.75</td><td class="n">0.83</td></tr>
+  <tr><td>Ahorro frente al promedio</td><td class="n">42.9%</td><td class="n">25.6%</td><td class="n">12.5%</td><td class="n">0.6%</td><td class="n">6.2%</td><td class="n">16.5%</td><td class="n">33.0%</td></tr>
+</table>
+
+<h2>7. Interpretación para el negocio</h2>
+<ul>
+  <li><b>Lo que importa para planificar es la tienda, no el producto.</b> Un producto que vendió bien en una tienda no tiene más probabilidad de vender bien en otra. Planificar con su historial hace que el centro de distribución reaccione a ruido.</li>
+  <li><b>Enviar el promedio no es neutral: es una decisión implícita de costos.</b> Equivale a suponer que faltar y sobrar cuestan lo mismo, algo que casi nunca es cierto. Cuanto más desiguales son esos costos, más dinero deja en la mesa.</li>
+  <li><b>El tipo de producto define cuánto colchón dejar.</b> En un Type1, la regla manda 11 unidades de un lácteo y 21 de un detergente, aunque ambos venden en promedio unas 16.</li>
+  <li><b>Las palancas que parecían obvias no lo son.</b> La visibilidad en góndola no muestra relación con las unidades vendidas, y el tamaño y la ubicación de la tienda no se pueden separar del formato.</li>
+</ul>
+
+<h2>8. Recomendaciones</h2>
+<ol>
+  <li><b>Planificar los envíos por formato de tienda y tipo de producto</b>, usando la tabla de la sección 6 en lugar del historial de cada producto.</li>
+  <li><b>Estimar los costos reales</b> de merma y de venta perdida por tipo de producto, y usar la tabla de sensibilidad para fijar el cuantil de cada uno. La regla se recalcula cambiando dos parámetros en <code>parameters_asignacion_inventario.yml</code>.</li>
+  <li><b>Probar la regla con un piloto</b> en dos tiendas Type1 durante varias semanas, midiendo merma, quiebres de stock y ventas frente a tiendas de control, antes de extenderla a toda la cadena.</li>
+  <li><b>Registrar inventario y quiebres de stock.</b> Es el dato que más mejoraría la próxima versión, porque permite distinguir entre lo que se vendió y lo que se habría vendido.</li>
+  <li><b>No usar la visibilidad como palanca de ventas</b> mientras no haya un experimento que muestre un efecto.</li>
+</ol>
+
+<h2>9. Limitaciones, sesgos y riesgos</h2>
+<ul>
+  <li><b>Ventas no es lo mismo que demanda.</b> Sin datos de inventario, suponemos que lo vendido refleja la demanda. Si hubo quiebres de stock, la demanda real es mayor y la regla subestima lo que hay que enviar.</li>
+  <li><b>Los costos son supuestos.</b> Las proporciones 1:3 y 3:1 ilustran el método; la decisión final depende de los costos reales de BigMart.</li>
+  <li><b>Riesgo de servicio en perecederos.</b> Con cuantil 0.25, en tres de cada cuatro casos se envía menos de lo que se habría vendido. Es óptimo si el costo de merma es realmente tres veces mayor, pero puede afectar la satisfacción del cliente. Hay que monitorearlo en el piloto.</li>
+  <li><b>Sin dimensión temporal.</b> El dataset no tiene fechas, así que no se modelan estacionalidad, promociones ni tendencia.</li>
+  <li><b>Formatos con una sola tienda.</b> Type2 (OUT018) y Type3 (OUT027) son una tienda cada uno: su regla refleja a esa tienda en particular.</li>
+  <li><b>Clasificación aproximada de perecederos</b> por tipo de producto (p. ej., <i>Breakfast</i> mezcla cereales y lácteos).</li>
+  <li><b>Datos posiblemente simplificados.</b> El patrón observado (las ventas se comportan como precio × factor de la tienda × ruido) sugiere un dataset de práctica más que datos operativos reales. Las conclusiones deben validarse con datos propios de la cadena.</li>
+</ul>
+
+<h2>10. Conclusión</h2>
+<p>Respondimos la pregunta de cuántas unidades enviar con una regla simple y verificable: planificar por formato de tienda y elegir el nivel de cobertura según el tipo de producto. Evaluada siempre con productos que no se usaron para construirla y contra las unidades realmente vendidas, la regla reduce el costo de asignación 18.8% frente a enviar el promedio, y planificar por formato asigna mal 9.5% menos unidades que planificar por producto. Los modelos más complejos (Random Forest y Gradient Boosting cuantílico ajustado) no superan a esta regla, lo que confirma que la información útil está en el formato de la tienda y en el costo de equivocarse. El siguiente paso es estimar los costos reales y validar la regla con un piloto.</p>
+
+<h2>Referencias</h2>
+<p class="nota">
+Dataset: Yasser H., <i>BigMart Sales Dataset</i>, Kaggle. <a href="https://www.kaggle.com/datasets/yasserh/bigmartsalesdataset">kaggle.com/datasets/yasserh/bigmartsalesdataset</a>.<br>
+Herramientas: Kedro 1.7, scikit-learn, pandas, SHAP, matplotlib, Ruff, pytest y GitHub Actions.<br>
+Método: problema del vendedor de periódicos (<i>newsvendor</i>); Arrow, K. J., Harris, T. y Marschak, J. (1951), "Optimal Inventory Policy", <i>Econometrica</i>, 19(3).
+</p>
+
+</body>
+</html>

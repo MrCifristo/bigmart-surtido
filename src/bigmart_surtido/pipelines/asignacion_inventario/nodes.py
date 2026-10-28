@@ -23,14 +23,16 @@ from sklearn.ensemble import HistGradientBoostingRegressor
 from sklearn.metrics import mean_pinball_loss
 from sklearn.model_selection import GroupKFold, ParameterGrid
 
-from bigmart_surtido.pipelines.data_science.nodes import (
+from bigmart_surtido.estilo import (
     COLOR_FONDO,
     COLOR_PRODUCTO,
     COLOR_TEXTO,
     COLOR_TEXTO_SECUNDARIO,
     COLOR_TIENDA,
-    BaselinePorGrupo,
+    estilo_ejes,
+    titulo,
 )
+from bigmart_surtido.pipelines.data_science.nodes import BaselinePorGrupo
 
 logger = logging.getLogger(__name__)
 
@@ -409,23 +411,13 @@ def construir_regla_asignacion(
     return regla, tabla
 
 
-def _estilo_ejes(ax) -> None:
-    ax.set_facecolor(COLOR_FONDO)
-    ax.tick_params(colors=COLOR_TEXTO_SECUNDARIO, length=0)
-    for lado in ("top", "right", "left"):
-        ax.spines[lado].set_visible(False)
-    ax.spines["bottom"].set_color("#d8d7d2")
-    ax.set_axisbelow(True)
-
-
 def graficar_asignacion(sensibilidad: pd.DataFrame, tabla: pd.DataFrame) -> Figure:
     """Gráfica del ahorro según los costos y de las unidades a enviar por formato."""
     figura = Figure(figsize=(12, 5.5), facecolor=COLOR_FONDO, layout="constrained")
     ax_sens, ax_tabla = figura.subplots(1, 2)
     for ax in (ax_sens, ax_tabla):
-        _estilo_ejes(ax)
+        estilo_ejes(ax)
 
-    ax_sens.grid(axis="y", color="#ecebe7", linewidth=0.8)
     ax_sens.plot(
         sensibilidad["ratio_faltante_sobrante"],
         sensibilidad["ahorro_pct"],
@@ -459,14 +451,8 @@ def graficar_asignacion(sensibilidad: pd.DataFrame, tabla: pd.DataFrame) -> Figu
     ax_sens.set_ylabel(
         "Ahorro frente a enviar el promedio (%)", color=COLOR_TEXTO_SECUNDARIO
     )
-    ax_sens.set_title(
-        "Cuanto más desiguales los costos, más ahorra",
-        loc="left",
-        color=COLOR_TEXTO,
-        fontweight="bold",
-    )
+    titulo(ax_sens, "Cuanto más desiguales los costos, más ahorra")
 
-    ax_tabla.grid(axis="y", color="#ecebe7", linewidth=0.8)
     formatos = tabla["Outlet_Type"].unique()
     x = np.arange(len(formatos))
     ancho = 0.38
@@ -513,10 +499,5 @@ def graficar_asignacion(sensibilidad: pd.DataFrame, tabla: pd.DataFrame) -> Figu
     ax_tabla.set_xticks(x, [f.replace("Supermarket ", "Super ") for f in formatos])
     ax_tabla.set_ylabel("Unidades por producto", color=COLOR_TEXTO_SECUNDARIO)
     ax_tabla.legend(frameon=False, loc="upper left", labelcolor=COLOR_TEXTO)
-    ax_tabla.set_title(
-        "Unidades a enviar por producto",
-        loc="left",
-        color=COLOR_TEXTO,
-        fontweight="bold",
-    )
+    titulo(ax_tabla, "Unidades a enviar por producto")
     return figura

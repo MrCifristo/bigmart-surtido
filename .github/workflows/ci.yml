@@ -44,4 +44,5 @@ jobs:
           test -f data/08_reporting/costos_por_escenario.csv
           test -f data/08_reporting/asignacion_inventario.png
           test -f data/08_reporting/shap_importancia.png
+          test -f data/08_reporting/exploracion.png
           cat data/08_reporting/metricas.json

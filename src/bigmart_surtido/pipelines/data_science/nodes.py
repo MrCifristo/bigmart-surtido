@@ -17,14 +17,17 @@ from sklearn.model_selection import KFold, train_test_split
 from sklearn.pipeline import Pipeline as SkPipeline
 from sklearn.preprocessing import OneHotEncoder
 
-logger = logging.getLogger(__name__)
+from bigmart_surtido.estilo import (
+    COLOR_FONDO,
+    COLOR_PRODUCTO,
+    COLOR_TEXTO,
+    COLOR_TEXTO_SECUNDARIO,
+    COLOR_TIENDA,
+    estilo_ejes,
+    titulo,
+)
 
-# Colores de la gráfica SHAP (paleta categórica validada para daltonismo).
-COLOR_TIENDA = "#2a78d6"
-COLOR_PRODUCTO = "#eb6834"
-COLOR_TEXTO = "#0b0b0b"
-COLOR_TEXTO_SECUNDARIO = "#52514e"
-COLOR_FONDO = "#fcfcfb"
+logger = logging.getLogger(__name__)
 
 
 class BaselinePorGrupo:
@@ -267,13 +270,7 @@ def _grafica_shap(importancia: pd.DataFrame, efecto: pd.DataFrame) -> Figure:
     figura = Figure(figsize=(12, 5.5), facecolor=COLOR_FONDO, layout="constrained")
     ax_imp, ax_efecto = figura.subplots(1, 2, width_ratios=[1, 1])
     for ax in (ax_imp, ax_efecto):
-        ax.set_facecolor(COLOR_FONDO)
-        ax.tick_params(colors=COLOR_TEXTO_SECUNDARIO, length=0)
-        for lado in ("top", "right", "left"):
-            ax.spines[lado].set_visible(False)
-        ax.spines["bottom"].set_color("#d8d7d2")
-        ax.grid(axis="x", color="#ecebe7", linewidth=0.8)
-        ax.set_axisbelow(True)
+        estilo_ejes(ax, grilla="x")
 
     orden = importancia.iloc[::-1]
     colores = np.where(orden["grupo"] == "Tienda", COLOR_TIENDA, COLOR_PRODUCTO)
@@ -283,12 +280,7 @@ def _grafica_shap(importancia: pd.DataFrame, efecto: pd.DataFrame) -> Figure:
             pct + 0.8, y, f"{pct:.1f}%", va="center", fontsize=9, color=COLOR_TEXTO
         )
     ax_imp.set_xlabel("% de la importancia SHAP total", color=COLOR_TEXTO_SECUNDARIO)
-    ax_imp.set_title(
-        "¿Qué variables mueven las unidades?",
-        loc="left",
-        color=COLOR_TEXTO,
-        fontweight="bold",
-    )
+    titulo(ax_imp, "¿Qué variables mueven las unidades?")
     leyenda = [
         Patch(
             color=color,
@@ -319,12 +311,7 @@ def _grafica_shap(importancia: pd.DataFrame, efecto: pd.DataFrame) -> Figure:
     ax_efecto.set_xlabel(
         "Unidades por producto frente al promedio", color=COLOR_TEXTO_SECUNDARIO
     )
-    ax_efecto.set_title(
-        "Efecto de cada tienda en las unidades",
-        loc="left",
-        color=COLOR_TEXTO,
-        fontweight="bold",
-    )
+    titulo(ax_efecto, "Efecto de cada tienda en las unidades")
     return figura
 
 
