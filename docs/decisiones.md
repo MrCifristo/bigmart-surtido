@@ -53,15 +53,16 @@ es configurable en `parameters_data_science.yml` (`target`).
 
 ## 4. Hallazgos del análisis exploratorio
 
-- **El formato de la tienda determina la demanda.** Para el mismo producto, un
-  Type3 vende 1.66× las unidades de un Type1, un Type2 vende 0.81× y una
+- **El formato de la tienda determina la demanda.** Para el mismo producto
+  (mediana entre productos, frente a su promedio en las tiendas Type1), un
+  Type3 vende 1.59× las unidades de un Type1, un Type2 vende 0.81× y una
   Grocery 0.13×.
-- **El producto casi no influye en las unidades.** Las unidades del mismo
-  producto en dos tiendas Type1 tienen una correlación de 0.01, y la
-  categoría de producto solo mueve el promedio entre 14 y 16 unidades.
+- **El producto casi no influye en las unidades.** La categoría de producto
+  solo mueve el promedio entre 14 y 16 unidades.
 - **La visibilidad no muestra efecto.** Su correlación negativa con las ventas
-  (−0.13) se debe a que las Grocery tienen más visibilidad por producto. Dentro
-  de los Supermarket Type1 la correlación con unidades es −0.01.
+  (−0.12) se debe a que las Grocery tienen más visibilidad por producto.
+  Comparando el mismo producto en distintas tiendas Type1, la correlación con
+  unidades es 0.01.
 - **Una regla simple ya es muy competitiva.** "Unidades promedio del formato ×
   precio" explica el 60.5% de la varianza de las ventas en Q, igual que los
   modelos de ML probados.

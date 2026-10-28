@@ -100,12 +100,13 @@
   <figcaption><b>Figura 1.</b> Izquierda: unidades vendidas por producto según el formato de la tienda. Centro y derecha: unidades y ventas promedio por cuartil de precio. El precio no cambia cuántas unidades se venden; solo multiplica el monto.</figcaption>
 </figure>
 <ul>
-  <li><b>El formato define la demanda.</b> Para el mismo producto, un Type3 vende 1.66 veces las unidades de un Type1, un Type2 vende 0.81 veces y una Grocery 0.13 veces.</li>
+  <li><b>El formato define la demanda.</b> Para el mismo producto, un Type3 vende 1.59 veces las unidades de un Type1, un Type2 vende 0.81 veces y una Grocery 0.13 veces.</li>
   <li><b>El producto no tiene "fuerza" propia.</b> Dividiendo las seis tiendas Type1 en dos grupos, la correlación de las unidades de cada producto entre grupos es 0.04. De los productos que están en el 20% más vendido de un grupo, solo el 20% lo está en el otro: lo mismo que se esperaría por azar.</li>
   <li><b>Las categorías rinden igual en todos los formatos.</b> De 64 combinaciones de tipo de producto × formato, solo 2 se desvían de forma significativa (se esperarían unas 3 por azar).</li>
   <li><b>La visibilidad no muestra efecto.</b> Comparando el mismo producto en distintas tiendas Type1, la correlación entre visibilidad y unidades es 0.01.</li>
   <li><b>El tamaño y la ubicación no se pueden aislar.</b> Con 10 tiendas, casi cada combinación de formato, tamaño y ubicación es una sola tienda. Dentro de las Type1, las unidades no cambian con el tamaño ni con la ubicación (entre 16.0 y 16.6).</li>
 </ul>
+<p>Cada hallazgo se reproduce, con su código y sus gráficas, en el notebook <code>notebooks/01_exploracion.ipynb</code> del repositorio.</p>
 
 <h2>4. Métodos</h2>
 <h3>Arquitectura de la solución</h3>
@@ -116,7 +117,7 @@
   <div class="flecha">→</div>
   <div class="paso final"><b>asignacion_inventario</b>Comparación de reglas, ajuste del modelo cuantílico, escenarios de costo, sensibilidad y regla final.</div>
 </div>
-<p class="nota">Proyecto Kedro con catálogo de datos y parámetros configurables (<code>conf/base/</code>); se ejecuta con <code>kedro run</code>. GitHub Actions corre Ruff, 23 pruebas automatizadas y el pipeline completo en cada push.</p>
+<p class="nota">Proyecto Kedro con catálogo de datos y parámetros configurables (<code>conf/base/</code>); se ejecuta con <code>kedro run</code>. GitHub Actions corre Ruff, 43 pruebas automatizadas y el pipeline completo en cada push.</p>
 
 <h3>Validación: siempre con productos que el modelo no vio</h3>
 <p>Toda la evaluación usa validación cruzada de 5 particiones <b>agrupada por producto</b>: todas las filas de un producto quedan del mismo lado, así que cada producto se evalúa con reglas que nunca lo vieron, como pasaría con un producto nuevo. Lo que cada regla habría enviado se compara contra las unidades que realmente se vendieron.</p>
