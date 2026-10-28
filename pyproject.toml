@@ -13,9 +13,11 @@ dynamic = [
 ]
 dependencies = [
     "kedro~=1.7.0",
-    "kedro-datasets[pandas-csvdataset,pickle-pickledataset,json-jsondataset]>=8.0",
+    "kedro-datasets[pandas-csvdataset,pickle-pickledataset,json-jsondataset,matplotlib-matplotlibdataset]>=8.0",
+    "matplotlib>=3.8",
     "pandas>=2.2",
     "scikit-learn>=1.5",
+    "shap>=0.46",
 ]
 
 [project.scripts]

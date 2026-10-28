@@ -18,5 +18,6 @@ def test_pipelines_registrados():
         "entrenar_modelo",
         "evaluar_modelos",
         "validacion_cruzada",
+        "explicar_modelo",
         "estimar_potencial",
     } <= nodos

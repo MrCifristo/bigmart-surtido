@@ -76,3 +76,17 @@ brecha_por_formato:
 brecha_tienda_categoria:
   type: pandas.CSVDataset
   filepath: data/08_reporting/brecha_tienda_categoria.csv
+
+importancia_shap:
+  type: pandas.CSVDataset
+  filepath: data/08_reporting/importancia_shap.csv
+
+efecto_tienda_shap:
+  type: pandas.CSVDataset
+  filepath: data/08_reporting/efecto_tienda_shap.csv
+
+grafica_shap:
+  type: matplotlib.MatplotlibDataset
+  filepath: data/08_reporting/shap_importancia.png
+  save_args:
+    dpi: 200

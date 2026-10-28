@@ -21,7 +21,7 @@ conf/base/
 data/01_raw/bigmart.csv            # dataset original (Kaggle)
 src/bigmart_surtido/pipelines/
   data_processing/                 # carga, limpieza y features
-  data_science/                    # división, línea base, modelo, evaluación y CV
+  data_science/                    # división, línea base, modelo, evaluación, CV y SHAP
   analisis_brecha/                 # brecha real vs. potencial por tienda y categoría
 tests/                             # pruebas con pytest
 .github/workflows/ci.yml           # Ruff + pruebas + kedro run en cada push/PR
@@ -32,7 +32,7 @@ tests/                             # pruebas con pytest
 | Pipeline | Nodos | Salidas principales |
 |---|---|---|
 | `data_processing` | `generar_reporte_calidad` → `normalizar_datos` → `imputar_faltantes` → `crear_features` | `data/08_reporting/reporte_calidad_datos.json`, `data/04_feature/bigmart_features.csv` |
-| `data_science` | `dividir_datos` → `entrenar_baseline` / `entrenar_modelo` → `evaluar_modelos`, `validacion_cruzada` | `data/06_models/*.pkl`, `data/08_reporting/metricas.json`, `data/08_reporting/metricas_cv.json` |
+| `data_science` | `dividir_datos` → `entrenar_baseline` / `entrenar_modelo` → `evaluar_modelos`, `validacion_cruzada`, `explicar_modelo` | `data/06_models/*.pkl`, `data/08_reporting/metricas*.json`, `data/08_reporting/*shap*` |
 | `analisis_brecha` | `estimar_potencial` → `brecha_por_tienda` / `brecha_por_formato` / `brecha_tienda_categoria` | `data/07_model_output/ventas_esperadas.csv`, `data/08_reporting/brecha_*.csv` |
 
 ## Instalación

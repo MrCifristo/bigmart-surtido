@@ -98,7 +98,29 @@ partición en particular. Esto confirma el hallazgo del EDA: fuera del formato
 de tienda, las variables no aportan señal sobre las unidades. Para las
 recomendaciones se elige el modelo más simple e interpretable.
 
-- **Pendiente:** ajuste de hiperparámetros y SHAP.
+### Explicabilidad con SHAP
+
+Nodo `explicar_modelo`: valores SHAP del Random Forest sobre el conjunto de
+prueba. Los SHAP de las columnas one-hot se suman para volver a la variable
+original. Salidas: `importancia_shap.csv`, `efecto_tienda_shap.csv` y
+`shap_importancia.png`.
+
+- **Las características de la tienda explican el 89.6% de la importancia** y
+  las del producto el 10.4%. `Outlet_Type` sola explica el 60.6%.
+- `Outlet_Age` (20.6%) y `Outlet_Identifier` (8.2%) son en la práctica la
+  misma información: hay 10 tiendas y 9 antigüedades distintas, así que la
+  antigüedad funciona como identificador de tienda. No hay que leerla como
+  "las tiendas más antiguas venden más".
+- Entre las variables de producto, la que más pesa es el precio, con 3.9%.
+  La visibilidad (2.3%), el tipo de producto (0.8%) y el contenido de grasa
+  (0.5%) casi no influyen.
+- **Efecto de la tienda** (unidades por producto frente a la predicción
+  promedio): OUT027 +11.1; las Type1 entre +0.6 y +1.2; OUT018 −1.5; las
+  Grocery −13.1. Es el mismo orden que la brecha de la sección 6.
+
+- **Ajuste de hiperparámetros:** no se hizo. Con la CV mostrando que el
+  Random Forest no supera al promedio por formato, el techo lo pone la señal
+  disponible en los datos, no los hiperparámetros.
 
 ## 6. Brecha entre ventas reales y potenciales
 

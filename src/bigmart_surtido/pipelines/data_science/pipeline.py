@@ -7,6 +7,7 @@ from .nodes import (
     entrenar_baseline,
     entrenar_modelo,
     evaluar_modelos,
+    explicar_modelo,
     validacion_cruzada,
 )
 
@@ -44,6 +45,12 @@ def create_pipeline(**kwargs) -> Pipeline:
                 inputs=["X_train", "y_train", "params:data_science"],
                 outputs="metricas_cv",
                 name="validacion_cruzada",
+            ),
+            Node(
+                func=explicar_modelo,
+                inputs=["modelo", "X_test"],
+                outputs=["importancia_shap", "efecto_tienda_shap", "grafica_shap"],
+                name="explicar_modelo",
             ),
         ]
     )

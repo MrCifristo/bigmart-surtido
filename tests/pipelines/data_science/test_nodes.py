@@ -8,6 +8,7 @@ from bigmart_surtido.pipelines.data_science.nodes import (
     entrenar_baseline,
     entrenar_modelo,
     evaluar_modelos,
+    explicar_modelo,
     validacion_cruzada,
 )
 
@@ -75,3 +76,31 @@ def test_validacion_cruzada(features):
     assert set(cv["baseline"]["promedio"]) == {"mae", "rmse", "r2"}
     assert 0 <= cv["folds_modelo_mejor_mae"] <= 3
     assert cv["baseline"]["promedio"]["r2"] > 0.5
+
+
+def test_explicar_modelo(features):
+    features["Outlet_Identifier"] = np.where(
+        features["Outlet_Type"] == "Grocery Store", "OUT010", "OUT013"
+    )
+    parametros = {
+        **PARAMETROS,
+        "features_categoricas": ["Outlet_Type", "Outlet_Identifier"],
+    }
+    X_train, X_test, y_train, _ = dividir_datos(features, parametros)
+    modelo = entrenar_modelo(X_train, y_train, parametros)
+
+    importancia, efecto, figura = explicar_modelo(modelo, X_test)
+
+    # Las columnas one-hot vuelven a su feature original.
+    assert set(importancia["feature"]) == {
+        "Item_MRP",
+        "Outlet_Type",
+        "Outlet_Identifier",
+    }
+    assert importancia["pct_importancia"].sum() == pytest.approx(100, abs=0.1)
+    assert importancia.set_index("feature").loc["Item_MRP", "grupo"] == "Producto"
+    # La tienda es lo único que mueve las unidades en estos datos.
+    assert importancia.iloc[0]["grupo"] == "Tienda"
+    efecto = efecto.set_index("Outlet_Identifier")["efecto_unidades"]
+    assert efecto["OUT010"] < 0 < efecto["OUT013"]
+    assert len(figura.axes) == 2
