@@ -80,9 +80,68 @@ Implicación: las decisiones por formato de tienda tienen respaldo en los
 datos. Las recomendaciones por producto individual hay que plantearlas con
 cautela y declararlas como limitación.
 
-## 5. Modelado (estado actual)
+## 5. Modelado
 
 - **Línea base:** promedio de unidades por `Outlet_Type` (`BaselinePorGrupo`).
-- **Modelo inicial:** Random Forest con one-hot de las variables categóricas.
-- **Pendiente:** validación cruzada, ajuste de hiperparámetros, SHAP y el
-  pipeline de salidas de negocio.
+- **Modelo:** Random Forest con one-hot de las variables categóricas.
+- **Validación cruzada** (5 folds sobre el conjunto de entrenamiento, nodo
+  `validacion_cruzada`, salida `metricas_cv.json`):
+
+| Modelo | MAE | RMSE | R² |
+|---|---|---|---|
+| Línea base (promedio por formato) | 5.34 ± 0.11 | 7.00 ± 0.21 | 0.423 ± 0.022 |
+| Random Forest | 5.36 ± 0.11 | 7.03 ± 0.22 | 0.417 ± 0.025 |
+
+El Random Forest **no supera a la línea base en ninguno de los 5 folds**. La
+mejora de 0.7% en el conjunto de prueba (`metricas.json`) se debe a esa
+partición en particular. Esto confirma el hallazgo del EDA: fuera del formato
+de tienda, las variables no aportan señal sobre las unidades. Para las
+recomendaciones se elige el modelo más simple e interpretable.
+
+- **Pendiente:** ajuste de hiperparámetros y SHAP.
+
+## 6. Brecha entre ventas reales y potenciales
+
+**Definición.** El potencial de una tienda es lo que vendería un Supermarket
+Type1 (el formato estándar, 6 de las 10 tiendas) con su mismo surtido. Se
+estima con un modelo entrenado solo con atributos del producto (precio, peso,
+tipo, contenido de grasa y categoría) y solo con tiendas Type1. Cada tienda
+Type1 se compara contra las **otras cinco**, nunca contra sí misma, para que
+la predicción sea fuera de muestra. La visibilidad se excluye porque la decide
+cada tienda.
+
+`brecha = unidades reales − unidades esperadas`; en Q se multiplica por el
+precio. El estadístico t mide si la brecha es consistente entre productos
+(|t| > 2) o si es ruido.
+
+Pipeline `analisis_brecha`: `estimar_potencial` →
+`brecha_por_tienda` / `brecha_por_formato` / `brecha_tienda_categoria`.
+
+| Tienda | Formato | Brecha | Brecha en Q | % productos bajo lo esperado | t |
+|---|---|---|---|---|---|
+| OUT027 | Type3 | +62.9% | +1,309,624 | 13% | 33.1 |
+| OUT035 | Type1 | +4.9% | +108,253 | 48% | 3.3 |
+| OUT017 | Type1 | +2.4% | +59,675 | 52% | 1.6 |
+| OUT049 | Type1 | +2.1% | +51,811 | 52% | 1.5 |
+| OUT013 | Type1 | −2.6% | −24,933 | 55% | −1.8 |
+| OUT046 | Type1 | −1.2% | −61,213 | 55% | −0.8 |
+| OUT045 | Type1 | −5.5% | −134,149 | 59% | −4.0 |
+| OUT018 | Type2 | −15.1% | −302,579 | 69% | −11.6 |
+| OUT019 | Grocery | −85.1% | −1,033,673 | 100% | −206 |
+| OUT010 | Grocery | −85.4% | −1,092,165 | 100% | −216 |
+
+**Lectura:**
+
+- **OUT018 (Type2)** es la tienda con brecha más clara frente a un formato
+  comparable: vende 15% menos que un Type1 con el mismo surtido, y la brecha
+  aparece en 13 de sus 16 categorías con |t| > 2. Es un problema de la
+  tienda, no de una categoría.
+- **Dentro de Type1**, OUT045 (−5.5%) y OUT035 (+4.9%) son las únicas con
+  brecha consistente (|t| > 3). Las demás están dentro del ruido.
+- **Las Grocery** no son comparables con un supermercado: su −85% refleja el
+  formato y no un mal desempeño. Sirve para dimensionar cuánto valdría
+  convertirlas.
+- **Tienda × categoría:** de las 96 celdas Type1, 15 tienen |t| > 2, frente
+  a unas 5 que se esperarían por azar. Hay alguna señal, pero con tantas
+  comparaciones las celdas individuales hay que tomarlas como hipótesis a
+  revisar, no como conclusiones.

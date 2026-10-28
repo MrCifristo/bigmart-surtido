@@ -17,10 +17,12 @@ conf/base/
   catalog.yml                      # datasets de entrada y salida
   parameters_data_processing.yml   # parámetros de limpieza
   parameters_data_science.yml      # objetivo, features, hiperparámetros
+  parameters_analisis_brecha.yml   # formato de referencia y niveles de la brecha
 data/01_raw/bigmart.csv            # dataset original (Kaggle)
 src/bigmart_surtido/pipelines/
   data_processing/                 # carga, limpieza y features
-  data_science/                    # división, línea base, modelo y evaluación
+  data_science/                    # división, línea base, modelo, evaluación y CV
+  analisis_brecha/                 # brecha real vs. potencial por tienda y categoría
 tests/                             # pruebas con pytest
 .github/workflows/ci.yml           # Ruff + pruebas + kedro run en cada push/PR
 ```
@@ -30,7 +32,8 @@ tests/                             # pruebas con pytest
 | Pipeline | Nodos | Salidas principales |
 |---|---|---|
 | `data_processing` | `generar_reporte_calidad` → `normalizar_datos` → `imputar_faltantes` → `crear_features` | `data/08_reporting/reporte_calidad_datos.json`, `data/04_feature/bigmart_features.csv` |
-| `data_science` | `dividir_datos` → `entrenar_baseline` / `entrenar_modelo` → `evaluar_modelos` | `data/06_models/*.pkl`, `data/08_reporting/metricas.json` |
+| `data_science` | `dividir_datos` → `entrenar_baseline` / `entrenar_modelo` → `evaluar_modelos`, `validacion_cruzada` | `data/06_models/*.pkl`, `data/08_reporting/metricas.json`, `data/08_reporting/metricas_cv.json` |
+| `analisis_brecha` | `estimar_potencial` → `brecha_por_tienda` / `brecha_por_formato` / `brecha_tienda_categoria` | `data/07_model_output/ventas_esperadas.csv`, `data/08_reporting/brecha_*.csv` |
 
 ## Instalación
 
@@ -48,6 +51,7 @@ pip install -e ".[dev]"
 kedro run                              # pipeline completo
 kedro run --pipeline data_processing   # solo limpieza
 kedro run --pipeline data_science      # solo modelado (requiere data_processing)
+kedro run --pipeline analisis_brecha   # solo brecha por tienda (requiere data_processing)
 ```
 
 Los parámetros (variable objetivo, features, hiperparámetros, tratamiento de

@@ -2,7 +2,13 @@
 
 from kedro.pipeline import Node, Pipeline
 
-from .nodes import dividir_datos, entrenar_baseline, entrenar_modelo, evaluar_modelos
+from .nodes import (
+    dividir_datos,
+    entrenar_baseline,
+    entrenar_modelo,
+    evaluar_modelos,
+    validacion_cruzada,
+)
 
 
 def create_pipeline(**kwargs) -> Pipeline:
@@ -32,6 +38,12 @@ def create_pipeline(**kwargs) -> Pipeline:
                 inputs=["modelo_baseline", "modelo", "X_test", "y_test"],
                 outputs="metricas",
                 name="evaluar_modelos",
+            ),
+            Node(
+                func=validacion_cruzada,
+                inputs=["X_train", "y_train", "params:data_science"],
+                outputs="metricas_cv",
+                name="validacion_cruzada",
             ),
         ]
     )

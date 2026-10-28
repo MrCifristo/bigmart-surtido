@@ -17,6 +17,8 @@ data_science:
   # Columna usada por la línea base (promedio del objetivo por grupo).
   baseline_grupo: Outlet_Type
   test_size: 0.2
+  # Número de folds de la validación cruzada (sobre el conjunto de entrenamiento).
+  cv_folds: 5
   random_state: 42
   modelo:
     n_estimators: 300

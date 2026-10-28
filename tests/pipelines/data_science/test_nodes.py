@@ -8,6 +8,7 @@ from bigmart_surtido.pipelines.data_science.nodes import (
     entrenar_baseline,
     entrenar_modelo,
     evaluar_modelos,
+    validacion_cruzada,
 )
 
 PARAMETROS = {
@@ -16,6 +17,7 @@ PARAMETROS = {
     "features_categoricas": ["Outlet_Type"],
     "baseline_grupo": "Outlet_Type",
     "test_size": 0.25,
+    "cv_folds": 3,
     "random_state": 0,
     "modelo": {"n_estimators": 10, "max_depth": 3, "min_samples_leaf": 1},
 }
@@ -63,3 +65,13 @@ def test_flujo_completo_de_evaluacion(features):
     assert metricas["objetivo"] == "Item_Units"
     assert set(metricas["modelo"]) == {"mae", "rmse", "r2"}
     assert metricas["baseline"]["r2"] > 0.5
+
+
+def test_validacion_cruzada(features):
+    X_train, _, y_train, _ = dividir_datos(features, PARAMETROS)
+    cv = validacion_cruzada(X_train, y_train, PARAMETROS)
+    assert cv["folds"] == 3
+    assert len(cv["modelo"]["por_fold"]) == 3
+    assert set(cv["baseline"]["promedio"]) == {"mae", "rmse", "r2"}
+    assert 0 <= cv["folds_modelo_mejor_mae"] <= 3
+    assert cv["baseline"]["promedio"]["r2"] > 0.5

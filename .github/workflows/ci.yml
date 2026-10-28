@@ -38,4 +38,7 @@ jobs:
         run: |
           test -f data/06_models/modelo.pkl
           test -f data/08_reporting/metricas.json
+          test -f data/08_reporting/metricas_cv.json
+          test -f data/08_reporting/brecha_por_tienda.csv
+          test -f data/08_reporting/brecha_tienda_categoria.csv
           cat data/08_reporting/metricas.json

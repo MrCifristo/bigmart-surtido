@@ -51,7 +51,28 @@ modelo:
   type: pickle.PickleDataset
   filepath: data/06_models/modelo.pkl
 
+# --- 07 model output ------------------------------------------------------
+ventas_esperadas:
+  type: pandas.CSVDataset
+  filepath: data/07_model_output/ventas_esperadas.csv
+
 # --- 08 reporting ---------------------------------------------------------
 metricas:
   type: json.JSONDataset
   filepath: data/08_reporting/metricas.json
+
+metricas_cv:
+  type: json.JSONDataset
+  filepath: data/08_reporting/metricas_cv.json
+
+brecha_por_tienda:
+  type: pandas.CSVDataset
+  filepath: data/08_reporting/brecha_por_tienda.csv
+
+brecha_por_formato:
+  type: pandas.CSVDataset
+  filepath: data/08_reporting/brecha_por_formato.csv
+
+brecha_tienda_categoria:
+  type: pandas.CSVDataset
+  filepath: data/08_reporting/brecha_tienda_categoria.csv
