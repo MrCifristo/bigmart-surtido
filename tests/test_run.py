@@ -20,4 +20,5 @@ def test_pipelines_registrados():
         "validacion_cruzada",
         "explicar_modelo",
         "construir_regla_asignacion",
+        "validar_parametros",
     } <= nodos
