@@ -40,6 +40,7 @@ TIPO = "Tipo_Producto"
 PERECEDERO = "Perecedero"
 NO_PERECEDERO = "No perecedero"
 TIPOS = [PERECEDERO, NO_PERECEDERO]
+MIN_CV_FOLDS = 2
 
 
 def cuantil_critico(costo_faltante: float, costo_sobrante: float) -> float:
@@ -130,6 +131,126 @@ def _costos_escenario(escenario: dict[str, Any]) -> dict[str, tuple[float, float
             for tipo, costos in escenario["por_tipo"].items()
         }
     return {tipo: (escenario["faltante"], escenario["sobrante"]) for tipo in TIPOS}
+
+
+def _es_numero(valor: Any) -> bool:
+    return isinstance(valor, int | float) and not isinstance(valor, bool)
+
+
+def _exigir(condicion: bool, nombre: str, valor: Any, regla: str) -> None:
+    if not condicion:
+        raise ValueError(
+            f"Parámetro inválido '{nombre}': {regla}. Valor recibido: {valor!r}"
+        )
+
+
+def _validar_costos(costos: Any, nombre: str) -> None:
+    _exigir(isinstance(costos, dict), nombre, costos, "debe ser un diccionario")
+    for clave in ("faltante", "sobrante"):
+        valor = costos.get(clave)
+        _exigir(
+            _es_numero(valor) and valor > 0,
+            f"{nombre}.{clave}",
+            valor,
+            "debe ser un número mayor que 0",
+        )
+
+
+def validar_parametros(parametros: dict[str, Any]) -> dict[str, Any]:
+    """Revisa los parámetros de ``asignacion_inventario`` antes de usarlos.
+
+    Detiene el pipeline al inicio con un mensaje claro, en lugar de un error
+    confuso de pandas o sklearn (o resultados sin sentido) más adelante.
+
+    Args:
+        parametros: Parámetros ``asignacion_inventario``.
+
+    Returns:
+        Los mismos parámetros, sin cambios.
+
+    Raises:
+        ValueError: Si algún parámetro no cumple su regla. El mensaje nombra el
+            parámetro y el valor recibido.
+    """
+    p = parametros
+    target = p.get("target")
+    _exigir(
+        isinstance(target, str) and target.strip() != "",
+        "target",
+        target,
+        "debe ser un texto no vacío",
+    )
+    cv_folds = p.get("cv_folds")
+    _exigir(
+        isinstance(cv_folds, int)
+        and not isinstance(cv_folds, bool)
+        and cv_folds >= MIN_CV_FOLDS,
+        "cv_folds",
+        cv_folds,
+        f"debe ser un entero mayor o igual a {MIN_CV_FOLDS}",
+    )
+    perecederas = p.get("categorias_perecederas")
+    _exigir(
+        isinstance(perecederas, list) and len(perecederas) > 0,
+        "categorias_perecederas",
+        perecederas,
+        "debe ser una lista no vacía",
+    )
+    cuantil = p.get("cuantil_ajuste")
+    _exigir(
+        _es_numero(cuantil) and 0 < cuantil < 1,
+        "cuantil_ajuste",
+        cuantil,
+        "debe ser un número estrictamente entre 0 y 1",
+    )
+
+    escenarios = p.get("escenarios_costo")
+    _exigir(
+        isinstance(escenarios, list) and len(escenarios) > 0,
+        "escenarios_costo",
+        escenarios,
+        "debe ser una lista no vacía",
+    )
+    for i, escenario in enumerate(escenarios):
+        nombre = f"escenarios_costo[{i}]"
+        _validar_costos(escenario, nombre)
+        etiqueta = escenario.get("nombre")
+        _exigir(
+            isinstance(etiqueta, str) and etiqueta.strip() != "",
+            f"{nombre}.nombre",
+            etiqueta,
+            "debe ser un texto no vacío",
+        )
+
+    costos_por_tipo = p.get("costos_por_tipo")
+    _exigir(
+        isinstance(costos_por_tipo, dict) and set(costos_por_tipo) == set(TIPOS),
+        "costos_por_tipo",
+        costos_por_tipo,
+        f"debe tener exactamente las claves {TIPOS}",
+    )
+    for tipo, costos in costos_por_tipo.items():
+        _validar_costos(costos, f"costos_por_tipo.{tipo}")
+
+    ratios = p.get("ratios_sensibilidad")
+    _exigir(
+        isinstance(ratios, list)
+        and len(ratios) > 0
+        and all(_es_numero(r) and r > 0 for r in ratios),
+        "ratios_sensibilidad",
+        ratios,
+        "debe ser una lista no vacía de números mayores que 0",
+    )
+    grilla = p.get("grilla_hiperparametros")
+    _exigir(
+        isinstance(grilla, dict)
+        and len(grilla) > 0
+        and all(isinstance(v, list) and len(v) > 0 for v in grilla.values()),
+        "grilla_hiperparametros",
+        grilla,
+        "debe ser un diccionario no vacío cuyos valores son listas no vacías",
+    )
+    return parametros
 
 
 def marcar_perecederos(

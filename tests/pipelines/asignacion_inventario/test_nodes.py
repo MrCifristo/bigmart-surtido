@@ -1,3 +1,5 @@
+import copy
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -13,6 +15,7 @@ from bigmart_surtido.pipelines.asignacion_inventario.nodes import (
     evaluar_escenarios_costo,
     graficar_asignacion,
     marcar_perecederos,
+    validar_parametros,
 )
 
 PARAMETROS = {
@@ -143,3 +146,58 @@ def test_sensibilidad_y_grafica(datos):
     assert fila_np["unidades_a_enviar"] > fila_np["unidades_promedio"]
     figura = graficar_asignacion(sensibilidad, tabla.reset_index())
     assert len(figura.axes) == 2
+
+
+def test_validar_parametros_validos_devuelve_el_mismo_dict():
+    assert validar_parametros(PARAMETROS) is PARAMETROS
+
+
+def _con(ruta, valor):
+    """Copia de PARAMETROS con ``valor`` en ``ruta`` (lista de claves)."""
+    parametros = copy.deepcopy(PARAMETROS)
+    destino = parametros
+    for clave in ruta[:-1]:
+        destino = destino[clave]
+    destino[ruta[-1]] = valor
+    return parametros
+
+
+@pytest.mark.parametrize(
+    ("ruta", "valor", "mensaje"),
+    [
+        (["target"], "", "target"),
+        (["target"], None, "target"),
+        (["cv_folds"], 1, "cv_folds"),
+        (["cv_folds"], 2.5, "cv_folds"),
+        (["categorias_perecederas"], [], "categorias_perecederas"),
+        (["cuantil_ajuste"], 0, "cuantil_ajuste"),
+        (["cuantil_ajuste"], 1, "cuantil_ajuste"),
+        (["cuantil_ajuste"], "0.5", "cuantil_ajuste"),
+        (["escenarios_costo"], [], "escenarios_costo"),
+        (["escenarios_costo", 0, "nombre"], "", r"escenarios_costo\[0\]\.nombre"),
+        (["escenarios_costo", 0, "faltante"], -1, r"escenarios_costo\[0\]\.faltante"),
+        (["escenarios_costo", 0, "sobrante"], 0, r"escenarios_costo\[0\]\.sobrante"),
+        (
+            ["costos_por_tipo"],
+            {"Perecedero": {"faltante": 1, "sobrante": 3}},
+            "costos_por_tipo",
+        ),
+        (
+            ["costos_por_tipo", "Perecedero", "faltante"],
+            -1,
+            r"costos_por_tipo\.Perecedero\.faltante",
+        ),
+        (
+            ["costos_por_tipo", "No perecedero", "sobrante"],
+            0,
+            r"costos_por_tipo\.No perecedero\.sobrante",
+        ),
+        (["ratios_sensibilidad"], [], "ratios_sensibilidad"),
+        (["ratios_sensibilidad"], [1, 0], "ratios_sensibilidad"),
+        (["grilla_hiperparametros"], {}, "grilla_hiperparametros"),
+        (["grilla_hiperparametros"], {"max_depth": []}, "grilla_hiperparametros"),
+    ],
+)
+def test_validar_parametros_invalidos(ruta, valor, mensaje):
+    with pytest.raises(ValueError, match=mensaje):
+        validar_parametros(_con(ruta, valor))
